@@ -1,0 +1,78 @@
+{
+    "translation": {
+        "settings": {
+            "title": "Ribbon Folder 设置",
+            "description": "创建分组并在 Ribbon 上显示为按钮，点击后弹出菜单执行命令。",
+            "iconFolder": {
+                "name": "图标文件夹",
+                "description": "自定义图标根目录。图标可填 Lucide 名（如 dice）或相对此目录的 .svg（如 add.svg）或库内完整路径。",
+                "placeholder": ".obsidian/icons 或 scripts/icons"
+            },
+            "addFolder": {
+                "name": "新建分组",
+                "description": "在 Ribbon 上添加一个新按钮组"
+            },
+            "groupsList": "分组列表",
+            "groupsListDescription": "点击分组行展开/收起；拖拽左侧把手可调整分组顺序。"
+        },
+        "folder": {
+            "delete": "删除分组",
+            "deleteConfirm": "确定要删除分组「{{name}}」吗？",
+            "name": "名称",
+            "namePlaceholder": "分组名称",
+            "unnamed": "未命名",
+            "icon": "图标",
+            "iconDescription": "Lucide 名（如 folder）或库内 .svg 路径；可点击「选择 SVG」从图标文件夹中选",
+            "iconPlaceholder": "folder 或 add.svg 或 scripts/icons/add.svg",
+            "selectSvg": "选择 SVG",
+            "menuDisplay": "菜单显示",
+            "menuDisplayDescription": "菜单中每条命令的显示方式",
+            "menuDisplayOptions": {
+                "icon-only": "仅图标",
+                "label-only": "仅标签",
+                "both": "都显示"
+            },
+            "triggerMode": "菜单触发",
+            "triggerModeDescription": "鼠标点击分组图标或悬停时显示菜单",
+            "triggerModeOptions": {
+                "click": "点击显示",
+                "hover": "悬停显示"
+            },
+            "commands": "命令",
+            "commandsHint": "（拖拽可调整顺序）",
+            "noCommands": "（暂无命令）",
+            "commandsCount": "{{count}} 个命令",
+            "addCommand": "添加命令"
+        },
+        "commands": {
+            "add": {
+                "title": "选择要添加的命令"
+            },
+            "edit": {
+                "title": "编辑命令",
+                "command": "命令",
+                "display": "菜单显示",
+                "displayDescription": "在菜单中显示的名称（留空则使用命令原名）",
+                "displayPlaceholder": "显示名称",
+                "icon": "图标",
+                "iconDescription": "Lucide 名（如 file-text）或库内 .svg 路径；可点击「选择 SVG」",
+                "iconPlaceholder": "file-text 或 add.svg 或 scripts/icons/add.svg",
+                "change": "更改命令",
+                "confirm": "确定"
+            },
+            "rename": {
+                "title": "重命名显示",
+                "displayAs": "菜单中显示为"
+            },
+            "editBtn": "编辑",
+            "removeBtn": "移除"
+        },
+        "modal": {
+            "searchPlaceholder": "搜索命令...",
+            "svgIcon": {
+                "searchPlaceholder": "搜索 SVG 图标…",
+                "emptyState": "图标文件夹中暂无 .svg 文件，可在此目录放入图标或直接填写 Lucide 图标名（如 dice）"
+            }
+        }
+    }
+}

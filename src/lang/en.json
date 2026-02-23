@@ -1,0 +1,78 @@
+{
+    "translation": {
+        "settings": {
+            "title": "Ribbon Folder Settings",
+            "description": "Create groups and display them as buttons on the Ribbon that open menus with commands.",
+            "iconFolder": {
+                "name": "Icon Folder",
+                "description": "Custom icon root directory. Icons can be Lucide names (e.g., dice), .svg files relative to this directory (e.g., add.svg), or full paths within your vault.",
+                "placeholder": ".obsidian/icons or scripts/icons"
+            },
+            "addFolder": {
+                "name": "New Group",
+                "description": "Add a new button group to the Ribbon"
+            },
+            "groupsList": "Groups List",
+            "groupsListDescription": "Click group rows to expand/collapse; drag handles to reorder groups."
+        },
+        "folder": {
+            "delete": "Delete Group",
+            "deleteConfirm": "Are you sure you want to delete the group \"{{name}}\"?",
+            "name": "Name",
+            "namePlaceholder": "Group name",
+            "unnamed": "Unnamed",
+            "icon": "Icon",
+            "iconDescription": "Lucide name (e.g., folder) or .svg path; click \"Select SVG\" to choose from icon folder",
+            "iconPlaceholder": "folder or add.svg or scripts/icons/add.svg",
+            "selectSvg": "Select SVG",
+            "menuDisplay": "Menu Display",
+            "menuDisplayDescription": "How commands are displayed in the menu",
+            "menuDisplayOptions": {
+                "icon-only": "Icon Only",
+                "label-only": "Label Only",
+                "both": "Both"
+            },
+            "triggerMode": "Menu Trigger",
+            "triggerModeDescription": "Display menu when clicking or hovering the group icon",
+            "triggerModeOptions": {
+                "click": "Click to Show",
+                "hover": "Hover to Show"
+            },
+            "commands": "Commands",
+            "commandsHint": "(drag to reorder)",
+            "noCommands": "(No commands)",
+            "commandsCount": "{{count}} commands",
+            "addCommand": "Add Command"
+        },
+        "commands": {
+            "add": {
+                "title": "Choose Command to Add"
+            },
+            "edit": {
+                "title": "Edit Command",
+                "command": "Command",
+                "display": "Menu Display",
+                "displayDescription": "Name displayed in menu (leave blank to use command's original name)",
+                "displayPlaceholder": "Display name",
+                "icon": "Icon",
+                "iconDescription": "Lucide name (e.g., file-text) or .svg path; click \"Select SVG\"",
+                "iconPlaceholder": "file-text or add.svg or scripts/icons/add.svg",
+                "change": "Change Command",
+                "confirm": "Confirm"
+            },
+            "rename": {
+                "title": "Rename Display",
+                "displayAs": "Display as"
+            },
+            "editBtn": "Edit",
+            "removeBtn": "Remove"
+        },
+        "modal": {
+            "searchPlaceholder": "Search commands...",
+            "svgIcon": {
+                "searchPlaceholder": "Search SVG icons...",
+                "emptyState": "No .svg files in icon folder. You can place icons in this directory or use Lucide icon names directly (e.g., dice)."
+            }
+        }
+    }
+}

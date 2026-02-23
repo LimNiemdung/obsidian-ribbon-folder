@@ -1,0 +1,219 @@
+/* Ribbon Folder 插件样式 */
+
+/* 分组列表容器 */
+.ribbon-folder-folders-wrap {
+	margin-bottom: 1em;
+}
+
+/* 单个分组：可折叠卡片，支持拖拽排序 */
+.ribbon-folder-folder-block {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	margin-bottom: 0.75em;
+	overflow: hidden;
+}
+
+.ribbon-folder-folder-block.is-expanded {
+	border-color: var(--interactive-accent);
+}
+
+.ribbon-folder-folder-block.is-drag-over {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+/* 分组标题行：点击展开/收起 */
+.ribbon-folder-folder-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px;
+	cursor: pointer;
+	background: var(--background-secondary);
+	user-select: none;
+}
+
+.ribbon-folder-folder-header:hover {
+	background: var(--background-secondary-alt);
+}
+
+.ribbon-folder-folder-drag-handle {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	cursor: grab;
+	color: var(--text-muted);
+	padding: 2px;
+}
+
+.ribbon-folder-folder-drag-handle:hover {
+	color: var(--text-normal);
+}
+
+.ribbon-folder-folder-drag-handle:active {
+	cursor: grabbing;
+}
+
+.ribbon-folder-folder-chevron {
+	flex-shrink: 0;
+	width: 1.2em;
+	color: var(--text-muted);
+	font-size: 0.9em;
+}
+
+.ribbon-folder-folder-title {
+	font-weight: 600;
+	flex: 0 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ribbon-folder-folder-meta {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: 0.85em;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ribbon-folder-folder-delete {
+	flex-shrink: 0;
+	margin-left: auto;
+	color: var(--text-error);
+}
+
+.ribbon-folder-folder-delete:hover {
+	color: var(--text-on-accent);
+	background: var(--interactive-accent);
+}
+
+/* 分组正文：折叠时隐藏 */
+.ribbon-folder-folder-body {
+	padding: 12px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.ribbon-folder-folder-block:not(.is-expanded) .ribbon-folder-folder-body {
+	display: none;
+}
+
+.ribbon-folder-folder-body .ribbon-folder-commands-block {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.ribbon-folder-setting-block {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	margin-bottom: 1em;
+}
+
+.ribbon-folder-commands-block {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.ribbon-folder-cmd-list {
+	margin: 0.5em 0;
+}
+
+.ribbon-folder-cmd-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.25em 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.ribbon-folder-cmd-row-btns {
+	display: flex;
+	gap: 0.35em;
+	margin-left: 0.5em;
+}
+
+.ribbon-folder-cmd-row button {
+	flex-shrink: 0;
+}
+
+.ribbon-folder-cmd-hint {
+	font-size: 0.9em;
+	opacity: 0.8;
+	margin-left: 0.5em;
+}
+
+/* 命令列表拖拽 */
+.ribbon-folder-draggable-list {
+	min-height: 2em;
+}
+
+.ribbon-folder-draggable-row {
+	cursor: grab;
+}
+
+.ribbon-folder-draggable-row:active {
+	cursor: grabbing;
+}
+
+.ribbon-folder-draggable-row.ribbon-folder-dragging {
+	opacity: 0.5;
+}
+
+.ribbon-folder-draggable-row.ribbon-folder-drag-over {
+	background: var(--background-modifier-hover);
+	outline: 1px dashed var(--color-accent);
+}
+
+.ribbon-folder-order .setting-item-control {
+	display: flex;
+	gap: 0.5em;
+}
+
+/* 命令选择 Modal */
+.ribbon-folder-modal .ribbon-folder-command-list {
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.ribbon-folder-command-row {
+	padding: 0.5em 0.75em;
+	cursor: pointer;
+	border-radius: 4px;
+	display: flex;
+	flex-direction: column;
+	gap: 0.15em;
+}
+
+.ribbon-folder-command-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.ribbon-folder-command-name {
+	font-weight: 500;
+}
+
+.ribbon-folder-command-id {
+	font-size: 0.85em;
+	opacity: 0.7;
+}
+
+.ribbon-folder-modal input[type="text"] {
+	width: 100%;
+	margin-bottom: 0.75em;
+	padding: 0.4em 0.6em;
+}
+
+/* 子菜单：仅图标 / 仅标签 时去掉菜单项内 icon 与文字之间的 gap */
+[data-ribbon-folder-display="icon-only"] .menu-item,
+[data-ribbon-folder-display="label-only"] .menu-item {
+	gap: 0;
+}
+[data-ribbon-folder-display="icon-only"] .menu-item .menu-item-icon {
+	margin-right: 0;
+}
+[data-ribbon-folder-display="label-only"] .menu-item .menu-item-icon {
+	display: none;
+}
