@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from "./types";
 import { getCssVarPx } from "./utils";
 import { resolveIconId } from "./utils/icon";
 import { RibbonFolderSettingTab } from "./SettingTab";
-import { t, updateLanguage, i18next } from "./i18n";
+import { t, updateLanguage } from "./i18n";
 
 export type { RibbonFolder, RibbonFolderCommand, RibbonFolderSettings } from "./types";
 
@@ -20,17 +20,8 @@ export default class RibbonFolderPlugin extends Plugin {
 		await this.rebuildRibbons();
 		this.addSettingTab(new RibbonFolderSettingTab(this.app, this));
 
-		// 初始化语言检测
+		// 初始化语言（按当前 Obsidian 语言环境）
 		updateLanguage();
-		console.log("Ribbon Folder plugin language initialized to:", i18next.language);
-
-		// 尝试监听语言变化事件（如果 Obsidian 提供此事件）
-		try {
-			// @ts-ignore - 尝试监听可能的语言变化事件
-			(this.app as any).setting?.on("language-change", updateLanguage);
-		} catch (error) {
-			console.warn("Failed to set up language change listener:", error);
-		}
 	}
 
 	onunload() {
