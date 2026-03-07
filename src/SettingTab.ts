@@ -382,9 +382,9 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			.setName(t("folder.menuDisplay"))
 			.setDesc(t("folder.menuDisplayDescription"))
 			.addDropdown((dropdown) => {
-				(Object.keys(MENU_DISPLAY_OPTIONS) as MenuDisplayMode[]).forEach((k) =>
-					dropdown.addOption(k, MENU_DISPLAY_OPTIONS[k])
-				);
+				(Object.keys(MENU_DISPLAY_OPTIONS) as MenuDisplayMode[]).forEach((k) => {
+					void dropdown.addOption(k, MENU_DISPLAY_OPTIONS[k]);
+				});
 				dropdown.setValue(folder.menuDisplay ?? "both");
 				dropdown.onChange((value) => {
 					folder.menuDisplay = value as MenuDisplayMode;
@@ -396,9 +396,9 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			.setName(t("folder.triggerMode"))
 			.setDesc(t("folder.triggerModeDescription"))
 			.addDropdown((dropdown) => {
-				(Object.keys(TRIGGER_MODE_OPTIONS) as MenuTriggerMode[]).forEach((k) =>
-					dropdown.addOption(k, TRIGGER_MODE_OPTIONS[k])
-				);
+				(Object.keys(TRIGGER_MODE_OPTIONS) as MenuTriggerMode[]).forEach((k) => {
+					void dropdown.addOption(k, TRIGGER_MODE_OPTIONS[k]);
+				});
 				dropdown.setValue(folder.triggerMode ?? "click");
 				dropdown.onChange((value) => {
 					folder.triggerMode = value as MenuTriggerMode;

@@ -122,8 +122,8 @@ export default class RibbonFolderPlugin extends Plugin {
 							const anyItem = item as unknown as { iconEl?: HTMLElement };
 							const svg = anyItem?.iconEl?.querySelector?.("svg.svg-icon") as HTMLElement | null;
 							if (svg) {
-								(svg as HTMLElement).style.width = `calc(var(--icon-size) * ${ratio})`;
-								(svg as HTMLElement).style.height = `var(--icon-size)`;
+								svg.style.width = `calc(var(--icon-size) * ${ratio})`;
+								svg.style.height = `var(--icon-size)`;
 							}
 						}, 0);
 					}
