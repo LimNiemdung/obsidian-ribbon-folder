@@ -2,7 +2,7 @@ import { App, Menu, MenuItem, Plugin } from "obsidian";
 import type { AppCommands, RibbonFolder, RibbonFolderSettings } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
 import { getCssVarPx } from "./utils";
-import { resolveIconId } from "./utils/icon";
+import { resolveIconId, getIconAspect } from "./utils/icon";
 import { RibbonFolderSettingTab } from "./SettingTab";
 import { t, updateLanguage } from "./i18n";
 
@@ -14,6 +14,7 @@ export default class RibbonFolderPlugin extends Plugin {
 	settings: RibbonFolderSettings;
 	private ribbonEls: Map<string, HTMLElement> = new Map();
 	private skipNextOpenFolderId: string | null = null;
+	private static readonly WIDE_ICON_MIN_RATIO = 1.25;
 
 	async onload() {
 		await this.loadSettings();
@@ -67,10 +68,10 @@ export default class RibbonFolderPlugin extends Plugin {
 			const leftOffset = getCssVarPx("--size-4-1");
 			el.addEventListener("mouseenter", (e: MouseEvent) => {
 				const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-				this.showFolderMenu(folder, { clientX: rect.right - leftOffset, clientY: rect.top + rect.height / 2 } as MouseEvent, true);
+				void this.showFolderMenu(folder, { clientX: rect.right - leftOffset, clientY: rect.top + rect.height / 2 } as MouseEvent, true);
 			});
 		} else {
-			el = this.addRibbonIcon(iconId, name, (evt: MouseEvent) => this.showFolderMenu(folder, evt));
+			el = this.addRibbonIcon(iconId, name, (evt: MouseEvent) => void this.showFolderMenu(folder, evt));
 		}
 		this.ribbonEls.set(folder.id, el);
 	}
@@ -112,7 +113,21 @@ export default class RibbonFolderPlugin extends Plugin {
 					? await resolveIconId(this.app, iconFolder, rawIcon)
 					: null;
 			menu.addItem((item: MenuItem) => {
-				if (displayMode !== "label-only" && iconId) item.setIcon(iconId as Parameters<MenuItem["setIcon"]>[0]);
+				if (displayMode !== "label-only" && iconId) {
+					item.setIcon(iconId as Parameters<MenuItem["setIcon"]>[0]);
+					const ratio = iconId ? getIconAspect(iconId) ?? 1 : 1;
+					if (ratio >= RibbonFolderPlugin.WIDE_ICON_MIN_RATIO) {
+						// 等待 icon 注入 DOM 后设置宽度
+						setTimeout(() => {
+							const anyItem = item as unknown as { iconEl?: HTMLElement };
+							const svg = anyItem?.iconEl?.querySelector?.("svg.svg-icon") as HTMLElement | null;
+							if (svg) {
+								(svg as HTMLElement).style.width = `calc(var(--icon-size) * ${ratio})`;
+								(svg as HTMLElement).style.height = `var(--icon-size)`;
+							}
+						}, 0);
+					}
+				}
 				else if (displayMode === "label-only") item.setIcon(null);
 				if (displayMode !== "icon-only") item.setTitle(title);
 				else if (!iconId) item.setTitle(title);

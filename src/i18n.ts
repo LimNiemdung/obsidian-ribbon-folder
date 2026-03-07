@@ -4,6 +4,12 @@ import { getLanguage } from "obsidian";
 import en from "./lang/en.json";
 import zhCN from "./lang/zh-CN.json";
 
+interface ObsidianAppFallback {
+  vault?: { config?: { language?: string } };
+  settings?: { language?: string };
+  lang?: string;
+}
+
 // 获取 Obsidian 语言设置 - 使用官方推荐的方法
 function getObsidianLanguage(): string {
   let language = "en";
@@ -11,15 +17,14 @@ function getObsidianLanguage(): string {
   try {
     // 使用 Obsidian 官方提供的 API 方法
     language = getLanguage();
-    console.log("Using Obsidian API language:", language);
   } catch (error) {
     console.error("Failed to get Obsidian language using API:", error);
 
     // API 方法失败时的 fallback 方案
     try {
       // 尝试通过内部属性获取
-      if (typeof window !== "undefined" && (window as any).app) {
-        const app = (window as any).app;
+      const app = (typeof window !== "undefined" && (window as Window & { app?: ObsidianAppFallback }).app);
+      if (app) {
         if (app.vault?.config?.language) {
           language = app.vault.config.language;
         } else if (app.settings?.language) {
@@ -42,7 +47,7 @@ function getObsidianLanguage(): string {
 }
 
 // 初始化 i18next
-i18next.init({
+void i18next.init({
   lng: getObsidianLanguage(),
   fallbackLng: {
     "zh-TW": ["zh-CN", "en"],
@@ -67,15 +72,13 @@ export { i18next };
 
 // 导出获取和更新语言的函数
 export function changeLanguage(lng: string) {
-  i18next.changeLanguage(lng);
-  console.log("Language changed to:", lng);
+  void i18next.changeLanguage(lng);
 }
 
 // 导出检测并更新语言的函数
 export function updateLanguage() {
   const newLang = getObsidianLanguage();
   if (newLang && newLang !== i18next.language) {
-    i18next.changeLanguage(newLang);
-    console.log("Language updated from", i18next.language, "to", newLang);
+    void i18next.changeLanguage(newLang);
   }
 }

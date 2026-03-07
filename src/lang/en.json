@@ -18,6 +18,8 @@
         "folder": {
             "delete": "Delete Group",
             "deleteConfirm": "Are you sure you want to delete the group \"{{name}}\"?",
+            "deleteConfirmCancel": "Cancel",
+            "deleteConfirmDelete": "Delete",
             "name": "Name",
             "namePlaceholder": "Group name",
             "unnamed": "Unnamed",

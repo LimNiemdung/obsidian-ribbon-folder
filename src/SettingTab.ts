@@ -1,6 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 import type { IRibbonFolderPlugin, RibbonFolder, MenuDisplayMode, MenuTriggerMode } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
+import { ConfirmModal } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { getSvgPathsInFolder } from "./utils/icon";
@@ -17,6 +18,63 @@ const TRIGGER_MODE_OPTIONS: Record<MenuTriggerMode, string> = {
 	hover: t("folder.triggerModeOptions.hover"),
 };
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function createSvgElement(attrs: Record<string, string>, ...children: SVGElement[]): SVGSVGElement {
+	const svg = document.createElementNS(SVG_NS, "svg");
+	for (const [k, v] of Object.entries(attrs)) svg.setAttribute(k, v);
+	for (const c of children) svg.appendChild(c);
+	return svg;
+}
+
+function createDragHandleSvg(): SVGSVGElement {
+	const circles = [
+		[9, 6],
+		[9, 12],
+		[9, 18],
+		[15, 6],
+		[15, 12],
+		[15, 18],
+	].map(([cx, cy]) => {
+		const c = document.createElementNS(SVG_NS, "circle");
+		c.setAttribute("cx", String(cx));
+		c.setAttribute("cy", String(cy));
+		c.setAttribute("r", "1");
+		return c;
+	});
+	return createSvgElement(
+		{ width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" },
+		...circles
+	);
+}
+
+function createTrashSvg(): SVGSVGElement {
+	const polyline = document.createElementNS(SVG_NS, "polyline");
+	polyline.setAttribute("points", "3 6 5 6 21 6");
+	const path = document.createElementNS(SVG_NS, "path");
+	path.setAttribute(
+		"d",
+		"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+	);
+	const line1 = document.createElementNS(SVG_NS, "line");
+	line1.setAttribute("x1", "10");
+	line1.setAttribute("y1", "11");
+	line1.setAttribute("x2", "10");
+	line1.setAttribute("y2", "17");
+	const line2 = document.createElementNS(SVG_NS, "line");
+	line2.setAttribute("x1", "14");
+	line2.setAttribute("y1", "11");
+	line2.setAttribute("x2", "14");
+	line2.setAttribute("y2", "17");
+	return createSvgElement(
+		{ width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" },
+		polyline,
+		path,
+		line1,
+		line2
+	);
+}
+
 export class RibbonFolderSettingTab extends PluginSettingTab {
 	plugin: IRibbonFolderPlugin;
 	private rebuildRibbonsTimer: number | null = null;
@@ -31,9 +89,9 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	/** 仅当「图标文件夹」等全局设置变更时防抖重建整个 Ribbon */
 	private scheduleRebuildRibbons(): void {
 		if (this.rebuildRibbonsTimer != null) clearTimeout(this.rebuildRibbonsTimer);
-		this.rebuildRibbonsTimer = window.setTimeout(async () => {
+		this.rebuildRibbonsTimer = window.setTimeout(() => {
 			this.rebuildRibbonsTimer = null;
-			await this.plugin.rebuildRibbons();
+			void this.plugin.rebuildRibbons();
 		}, REBUILD_DEBOUNCE_MS);
 	}
 
@@ -44,9 +102,9 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		if (existing != null) clearTimeout(existing);
 		this.refreshFolderTimers.set(
 			id,
-			window.setTimeout(async () => {
+			window.setTimeout(() => {
 				this.refreshFolderTimers.delete(id);
-				await this.refreshRibbonForFolder(folder);
+				void this.refreshRibbonForFolder(folder);
 			}, REBUILD_DEBOUNCE_MS)
 		);
 	}
@@ -67,11 +125,8 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		});
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: t("settings.title") });
-		containerEl.createEl("p", {
-			text: t("settings.description"),
-			cls: "setting-item-description",
-		});
+		new Setting(containerEl).setName(t("settings.title")).setHeading();
+		new Setting(containerEl).setName("").setDesc(t("settings.description"));
 
 		new Setting(containerEl)
 			.setName(t("settings.iconFolder.name"))
@@ -80,10 +135,12 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder(t("settings.iconFolder.placeholder"))
 					.setValue(this.plugin.settings.iconFolder ?? "")
-					.onChange(async (value) => {
+					.onChange((value) => {
 						this.plugin.settings.iconFolder = (value ?? "").trim();
-						await this.plugin.saveSettings();
-						this.scheduleRebuildRibbons();
+						void (async () => {
+							await this.plugin.saveSettings();
+							this.scheduleRebuildRibbons();
+						})();
 					})
 			);
 
@@ -91,16 +148,13 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			.setName(t("settings.addFolder.name"))
 			.setDesc(t("settings.addFolder.description"))
 			.addButton((btn) =>
-				btn.setButtonText(t("settings.addFolder.name")).onClick(async () => {
-					await this.addNewFolder();
+				btn.setButtonText(t("settings.addFolder.name")).onClick(() => {
+					void this.addNewFolder();
 				})
 			);
 
-		containerEl.createEl("h3", { text: t("settings.groupsList") });
-		containerEl.createEl("p", {
-			text: t("settings.groupsListDescription"),
-			cls: "setting-item-description",
-		});
+		new Setting(containerEl).setName(t("settings.groupsList")).setHeading();
+		new Setting(containerEl).setName("").setDesc(t("settings.groupsListDescription"));
 
 		const listWrap = containerEl.createDiv({ cls: "ribbon-folder-folders-wrap" });
 		for (let i = 0; i < this.plugin.settings.folders.length; i++) {
@@ -138,18 +192,20 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					entry.id = result.id;
 					entry.displayName = result.displayName;
 					entry.icon = result.icon;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 					metaEl.setText(t("folder.commandsCount", { count: folder.commands.length }));
 					this.display();
 				}).open();
 			});
 			const removeBtn = btnWrap.createEl("button", { text: t("commands.removeBtn") });
-			removeBtn.addEventListener("click", async (e) => {
+			removeBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
-				folder.commands = folder.commands.filter((c) => c.id !== entry.id);
-				await this.plugin.saveSettings();
-				metaEl.setText(t("folder.commandsCount", { count: folder.commands.length }));
-				this.display();
+				void (async () => {
+					folder.commands = folder.commands.filter((c) => c.id !== entry.id);
+					await this.plugin.saveSettings();
+					metaEl.setText(t("folder.commandsCount", { count: folder.commands.length }));
+					this.display();
+				})();
 			});
 
 			row.addEventListener("dragstart", (e: DragEvent) => {
@@ -170,7 +226,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				e.stopPropagation();
 				row.removeClass("ribbon-folder-drag-over");
 			});
-			row.addEventListener("drop", async (e: DragEvent) => {
+			row.addEventListener("drop", (e: DragEvent) => {
 				e.preventDefault();
 				e.stopPropagation();
 				row.removeClass("ribbon-folder-drag-over");
@@ -180,9 +236,11 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				const item = folder.commands[fromIndex];
 				folder.commands.splice(fromIndex, 1);
 				folder.commands.splice(toIndex, 0, item);
-				await this.plugin.saveSettings();
-				cmdListEl.empty();
-				this.renderFolderCommandRows(cmdListEl, folder, metaEl);
+				void (async () => {
+					await this.plugin.saveSettings();
+					cmdListEl.empty();
+					this.renderFolderCommandRows(cmdListEl, folder, metaEl);
+				})();
 			});
 		});
 	}
@@ -213,8 +271,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		const dragHandle = header.createSpan({ cls: "ribbon-folder-folder-drag-handle" });
 		dragHandle.setAttribute("draggable", "true");
 		dragHandle.setAttribute("aria-label", "Drag to reorder");
-		dragHandle.innerHTML =
-			'<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>';
+		dragHandle.appendChild(createDragHandleSvg());
 		dragHandle.onclick = (e) => e.stopPropagation();
 		dragHandle.ondragstart = (e) => {
 			e.stopPropagation();
@@ -234,16 +291,22 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 
 		const deleteBtn = header.createEl("button", { cls: "clickable-icon ribbon-folder-folder-delete" });
 		deleteBtn.setAttribute("aria-label", t("folder.delete"));
-		deleteBtn.innerHTML =
-			'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
-		deleteBtn.onclick = async (e) => {
+		deleteBtn.appendChild(createTrashSvg());
+		deleteBtn.onclick = (e) => {
 			e.preventDefault();
 			e.stopPropagation();
-			if (!confirm(t("folder.deleteConfirm", { name: folder.name || t("folder.unnamed") }))) return;
-			this.plugin.settings.folders = this.plugin.settings.folders.filter((f) => f.id !== folder.id);
-			this.plugin.removeRibbonForFolder(folder.id);
-			await this.plugin.saveSettings();
-			this.display();
+			new ConfirmModal(
+				this.app,
+				t("folder.deleteConfirm", { name: folder.name || t("folder.unnamed") }),
+				() => {
+					this.plugin.settings.folders = this.plugin.settings.folders.filter((f) => f.id !== folder.id);
+					this.plugin.removeRibbonForFolder(folder.id);
+					void (async () => {
+						await this.plugin.saveSettings();
+						this.display();
+					})();
+				}
+			).open();
 		};
 
 		header.onclick = (e) => {
@@ -271,11 +334,13 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder(t("folder.namePlaceholder"))
 					.setValue(folder.name)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						folder.name = value || t("folder.unnamed");
-						await this.plugin.saveSettings();
-						titleEl.setText(folder.name || t("folder.unnamed"));
-						this.plugin.updateRibbonDisplay(folder);
+						void (async () => {
+							await this.plugin.saveSettings();
+							titleEl.setText(folder.name || t("folder.unnamed"));
+							this.plugin.updateRibbonDisplay(folder);
+						})();
 					})
 			);
 
@@ -288,22 +353,28 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder(t("folder.iconPlaceholder"))
 					.setValue(folder.icon)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						folder.icon = value || "folder";
-						await this.plugin.saveSettings();
-						this.scheduleRefreshRibbonForFolder(folder);
+						void (async () => {
+							await this.plugin.saveSettings();
+							this.scheduleRefreshRibbonForFolder(folder);
+						})();
 					});
 			})
 			.addButton((btn) =>
-				btn.setButtonText(t("folder.selectSvg")).onClick(async () => {
-					const iconFolder = this.plugin.settings.iconFolder ?? "";
-					const items = await getSvgPathsInFolder(this.plugin.app, iconFolder || "");
-					new SvgIconSuggestModal(this.plugin.app, items, async (path) => {
-						folderIconInput.value = path;
-						folder.icon = path;
-						await this.plugin.saveSettings();
-						await this.refreshRibbonForFolder(folder);
-					}).open();
+				btn.setButtonText(t("folder.selectSvg")).onClick(() => {
+					void (async () => {
+						const iconFolder = this.plugin.settings.iconFolder ?? "";
+						const items = await getSvgPathsInFolder(this.plugin.app, iconFolder || "");
+						new SvgIconSuggestModal(this.plugin.app, items, (path) => {
+							folderIconInput.value = path;
+							folder.icon = path;
+							void (async () => {
+								await this.plugin.saveSettings();
+								await this.refreshRibbonForFolder(folder);
+							})();
+						}).open();
+					})();
 				})
 			);
 
@@ -315,9 +386,9 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					dropdown.addOption(k, MENU_DISPLAY_OPTIONS[k])
 				);
 				dropdown.setValue(folder.menuDisplay ?? "both");
-				dropdown.onChange(async (value) => {
+				dropdown.onChange((value) => {
 					folder.menuDisplay = value as MenuDisplayMode;
-					await this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 
@@ -329,10 +400,12 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					dropdown.addOption(k, TRIGGER_MODE_OPTIONS[k])
 				);
 				dropdown.setValue(folder.triggerMode ?? "click");
-				dropdown.onChange(async (value) => {
+				dropdown.onChange((value) => {
 					folder.triggerMode = value as MenuTriggerMode;
-					await this.plugin.saveSettings();
-					await this.refreshRibbonForFolder(folder);
+					void (async () => {
+						await this.plugin.saveSettings();
+						await this.refreshRibbonForFolder(folder);
+					})();
 				});
 			});
 
@@ -351,7 +424,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					new CommandPickerModal(this.app, (chosenId) => {
 						if (!folder.commands.some((c) => c.id === chosenId)) {
 							folder.commands.push({ id: chosenId });
-							this.plugin.saveSettings();
+							void this.plugin.saveSettings();
 							metaEl.setText(t("folder.commandsCount", { count: folder.commands.length }));
 							this.display();
 						}
@@ -367,7 +440,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		block.ondragleave = (e) => {
 			if (!block.contains(e.relatedTarget as Node)) block.removeClass("is-drag-over");
 		};
-		block.ondrop = async (e) => {
+		block.ondrop = (e) => {
 			e.preventDefault();
 			block.removeClass("is-drag-over");
 			const fromIndex = parseInt(e.dataTransfer?.getData("application/x-ribbon-folder-index") ?? "", 10);
@@ -377,9 +450,11 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			const [item] = arr.splice(fromIndex, 1);
 			const insertAt = fromIndex < toIndex ? toIndex - 1 : toIndex;
 			arr.splice(insertAt, 0, item);
-			await this.plugin.saveSettings();
-			await this.plugin.rebuildRibbons();
-			this.display();
+			void (async () => {
+				await this.plugin.saveSettings();
+				await this.plugin.rebuildRibbons();
+				this.display();
+			})();
 		};
 	}
 }

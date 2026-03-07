@@ -22,3 +22,7 @@ data.json
 .DS_Store
 
 .claude
+
+deploy.ps1
+
+sync-to-vaults.mjs

@@ -18,6 +18,8 @@
         "folder": {
             "delete": "删除分组",
             "deleteConfirm": "确定要删除分组「{{name}}」吗？",
+            "deleteConfirmCancel": "取消",
+            "deleteConfirmDelete": "删除",
             "name": "名称",
             "namePlaceholder": "分组名称",
             "unnamed": "未命名",
