@@ -26,8 +26,8 @@ export class EditCommandModal extends Modal {
 		contentEl.createEl("h2", { text: t("commands.edit.title") });
 
 		let currentId = this.entry.id;
-		let displayName = this.entry.displayName?.trim() ?? "";
-		let icon = this.entry.icon?.trim() ?? "";
+		const displayName = this.entry.displayName?.trim() ?? "";
+		const icon = this.entry.icon?.trim() ?? "";
 
 		const cmdSetting = new Setting(contentEl).setName(t("commands.edit.command"));
 		const updateCommandDesc = () => {
