@@ -2,6 +2,7 @@ import { App, Modal, Setting } from "obsidian";
 import type { RibbonFolderCommand } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
+import { listCommandsWithIcons } from "./utils/commands";
 import { getSvgPathsInFolder } from "./utils/icon";
 import { t } from "./i18n";
 
@@ -31,8 +32,8 @@ export class EditCommandModal extends Modal {
 
 		const cmdSetting = new Setting(contentEl).setName(t("commands.edit.command"));
 		const updateCommandDesc = () => {
-			const all = (this.app as { commands?: { listCommands(): { id: string; name: string }[] } }).commands?.listCommands?.();
-			const cmd = all?.find((c) => c.id === currentId);
+			const all = listCommandsWithIcons(this.app);
+			const cmd = all.find((c) => c.id === currentId);
 			cmdSetting.setDesc("Current: " + (cmd ? cmd.name : currentId));
 		};
 		updateCommandDesc();

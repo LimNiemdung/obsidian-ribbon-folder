@@ -1,6 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type {
 	IRibbonFolderPlugin,
+	CommandListItem,
 	RibbonFolder,
 	MenuDisplayMode,
 	MenuTriggerMode,
@@ -238,7 +239,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		}
 	}
 
-	private entryLabel(entry: RibbonFolderEntry, allCommands: { id: string; name: string }[]): string {
+	private entryLabel(entry: RibbonFolderEntry, allCommands: CommandListItem[]): string {
 		if (isRibbonSeparatorEntry(entry)) return t("folder.separatorLabel");
 		if (isRibbonNoteEntry(entry)) {
 			const base = entry.path.split("/").pop() ?? entry.path;
@@ -256,15 +257,13 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	/** 与弹出菜单一致的图标解析用原始字符串（Lucide 名或 .svg 路径） */
 	private getEntryIconRaw(
 		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry,
-		allCommands: { id: string; name: string; icon?: string }[]
+		allCommands: CommandListItem[]
 	): string {
 		if (isRibbonNoteEntry(entry)) {
 			return entry.icon?.trim() || DEFAULT_NOTE_MENU_ICON;
 		}
 		const cmd = allCommands.find((c) => c.id === entry.id);
-		return (
-			entry.icon?.trim() || (cmd as { icon?: string } | undefined)?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON
-		);
+		return entry.icon?.trim() || cmd?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON;
 	}
 
 	/** 仅渲染某分组的菜单项列表（命令与笔记；拖拽后局部刷新） */

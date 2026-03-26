@@ -11,6 +11,7 @@ import {
 } from "obsidian";
 import type {
 	AppCommands,
+	CommandListItem,
 	RibbonFolder,
 	RibbonFolderSettings,
 	RibbonFolderCommandEntry,
@@ -25,12 +26,14 @@ import {
 	isRibbonNoteEntry,
 	isRibbonSeparatorEntry,
 } from "./types";
+import { listCommandsWithIcons } from "./utils/commands";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, getIconAspect } from "./utils/icon";
 import { RibbonFolderSettingTab } from "./SettingTab";
 import { t, updateLanguage } from "./i18n";
 
 export type {
+	CommandListItem,
 	RibbonFolder,
 	RibbonFolderCommand,
 	RibbonFolderCommandEntry,
@@ -227,7 +230,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		ctx: {
 			displayMode: MenuDisplayMode;
 			iconFolder: string;
-			allCommands: { id: string; name: string }[];
+			allCommands: CommandListItem[];
 			appCommands: AppCommands;
 		}
 	): Promise<void> {
@@ -250,9 +253,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			const cmd = allCommands.find((c) => c.id === entry.id);
 			title = entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
 			rawIcon =
-				entry.icon?.trim() ||
-				(cmd as { icon?: string } | undefined)?.icon ||
-				DEFAULT_COMMAND_MENU_ICON;
+				entry.icon?.trim() || cmd?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON;
 			onClick = () => {
 				void appCommands.executeCommandById(entry.id);
 			};
@@ -298,7 +299,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		menu.setUseNativeMenu(false);
 
 		const appCommands = (this.app as App & { commands: AppCommands }).commands;
-		const allCommands = appCommands.listCommands();
+		const allCommands = listCommandsWithIcons(this.app);
 		const iconFolder = this.settings.iconFolder ?? "";
 
 		const displayMode = folder.menuDisplay ?? "both";
@@ -433,8 +434,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		setTimeout(() => setupHoverClose(0), 0);
 	}
 
-	getAllCommands(): { id: string; name: string }[] {
-		const commands = (this.app as App & { commands: AppCommands }).commands;
-		return commands.listCommands();
+	getAllCommands(): CommandListItem[] {
+		return listCommandsWithIcons(this.app);
 	}
 }

@@ -1,8 +1,11 @@
 import type { App } from "obsidian";
 
+/** 命令列表项（含可选 icon，与 Obsidian `addCommand` 注册一致，常作为 Ribbon/命令面板默认图标） */
+export type CommandListItem = { id: string; name: string; icon?: string };
+
 /** Obsidian 运行时存在但类型定义中未声明的 commands API */
 export interface AppCommands {
-	listCommands(): { id: string; name: string }[];
+	listCommands(): CommandListItem[];
 	executeCommandById(id: string): Promise<void> | void;
 }
 
@@ -91,7 +94,7 @@ export interface IRibbonFolderPlugin {
 	removeRibbonForFolder(folderId: string): void;
 	/** 仅更新已有按钮的标题/图标显示，不删除重建，避免重复按钮 */
 	updateRibbonDisplay(folder: RibbonFolder): void;
-	getAllCommands(): { id: string; name: string }[];
+	getAllCommands(): CommandListItem[];
 }
 
 export const DEFAULT_SETTINGS: RibbonFolderSettings = {

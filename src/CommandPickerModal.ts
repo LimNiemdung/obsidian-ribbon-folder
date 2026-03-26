@@ -1,6 +1,6 @@
 import { App, Modal } from "obsidian";
-import type { AppCommands } from "./types";
 import { t } from "./i18n";
+import { listCommandsWithIcons } from "./utils/commands";
 
 export class CommandPickerModal extends Modal {
 	onChoose: (commandId: string) => void;
@@ -34,7 +34,7 @@ export class CommandPickerModal extends Modal {
 		if (!wrap) return;
 		wrap.empty();
 
-		const commands = (this.app as App & { commands: AppCommands }).commands.listCommands();
+		const commands = listCommandsWithIcons(this.app);
 		const f = this.filter.toLowerCase();
 		const filtered = f
 			? commands.filter((c) => c.name.toLowerCase().includes(f) || c.id.toLowerCase().includes(f))
