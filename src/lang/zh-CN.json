@@ -94,6 +94,10 @@
                 "iconPlaceholder": "file 或 add.svg"
             }
         },
+        "plugin": {
+            "openGroupMenu": "Ribbon Folder：打开分组菜单…",
+            "noGroupsYet": "请先在 Ribbon Folder 设置中创建分组。"
+        },
         "modal": {
             "notePickerPlaceholder": "搜索笔记…",
             "searchPlaceholder": "搜索命令...",

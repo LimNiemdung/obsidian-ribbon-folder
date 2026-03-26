@@ -6,5 +6,5 @@
 	"description": "Organize multiple commands into grouped buttons on the Ribbon, click to expand and execute commands from a menu for a cleaner interface.",
 	"author": "Lim Niemdung",
 	"authorUrl": "https://github.com/limniemdung",
-	"isDesktopOnly": true
+	"isDesktopOnly": false
 }

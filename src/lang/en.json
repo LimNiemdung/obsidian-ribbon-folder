@@ -94,6 +94,10 @@
                 "iconPlaceholder": "file or add.svg"
             }
         },
+        "plugin": {
+            "openGroupMenu": "Ribbon Folder: Open group menu…",
+            "noGroupsYet": "Create a group in Ribbon Folder settings first."
+        },
         "modal": {
             "notePickerPlaceholder": "Search notes...",
             "searchPlaceholder": "Search commands...",

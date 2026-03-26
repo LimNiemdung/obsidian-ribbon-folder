@@ -1,4 +1,14 @@
-import { App, Menu, MenuItem, Plugin, TFile, type HoverParent, type HoverPopover } from "obsidian";
+import {
+	App,
+	Menu,
+	MenuItem,
+	Notice,
+	Platform,
+	Plugin,
+	TFile,
+	type HoverParent,
+	type HoverPopover,
+} from "obsidian";
 import type {
 	AppCommands,
 	RibbonFolder,
@@ -27,24 +37,6 @@ const RIBBON_OR_LAYOUT_CLS = /horizontal-main-container|workspace-leaf|workspace
 
 const HOVER_LINK_SOURCE_ID = "ribbon-folder";
 
-/** 核心「页面预览」插件实例（与 Quick Explorer 相同用法，非公开 API） */
-type PagePreviewPlugin = {
-	enabled?: boolean;
-	instance?: {
-		onLinkHover?: (
-			hoverParent: HoverParent,
-			target: HTMLElement,
-			linktext: string,
-			sourcePath: string
-		) => void;
-	};
-};
-
-function getPagePreviewPlugin(app: App): PagePreviewPlugin | undefined {
-	return (app as unknown as { internalPlugins?: { plugins?: Record<string, PagePreviewPlugin> } }).internalPlugins
-		?.plugins?.["page-preview"];
-}
-
 export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	hoverPopover: HoverPopover | null = null;
 	settings: RibbonFolderSettings;
@@ -60,6 +52,12 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		this.registerHoverLinkSource(HOVER_LINK_SOURCE_ID, {
 			display: this.manifest.name,
 			defaultMod: false,
+		});
+
+		this.addCommand({
+			id: "open-group-menu",
+			name: t("plugin.openGroupMenu"),
+			callback: () => this.openGroupPicker(),
 		});
 
 		// 初始化语言（按当前 Obsidian 语言环境）
@@ -103,8 +101,10 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		const iconId = await resolveIconId(this.app, base, folder.icon || "folder");
 		const name = folder.name || "Ribbon Folder";
 		const triggerMode = folder.triggerMode ?? "click";
+		/** 仅桌面端支持悬停打开；手机/平板无可靠悬停，按点击处理 */
+		const useHoverOpen = triggerMode === "hover" && Platform.isDesktop;
 		let el: HTMLElement;
-		if (triggerMode === "hover") {
+		if (useHoverOpen) {
 			el = this.addRibbonIcon(iconId, name, () => {});
 			const leftOffset = getCssVarPx("--size-4-1");
 			el.addEventListener("mouseenter", (e: MouseEvent) => {
@@ -125,6 +125,38 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		}
 	}
 
+	/** 命令面板：打开分组菜单（移动端侧栏 Ribbon 不便时可用；仅一个分组时直接打开） */
+	private openGroupPicker(): void {
+		const folders = this.settings.folders;
+		if (folders.length === 0) {
+			new Notice(t("plugin.noGroupsYet"));
+			return;
+		}
+		if (folders.length === 1) {
+			void this.showFolderMenu(folders[0], RibbonFolderPlugin.syntheticMenuAnchorEvent());
+			return;
+		}
+		const menu = new Menu();
+		menu.setUseNativeMenu(false);
+		for (const f of folders) {
+			menu.addItem((item: MenuItem) => {
+				item.setTitle(f.name?.trim() || t("folder.unnamed"));
+				item.onClick(() => void this.showFolderMenu(f, RibbonFolderPlugin.syntheticMenuAnchorEvent()));
+			});
+		}
+		menu.showAtPosition({
+			x: Math.floor(window.innerWidth / 2),
+			y: Math.min(160, Math.floor(window.innerHeight * 0.12)),
+		});
+	}
+
+	/** 无真实点击事件时用于菜单定位（命令面板 / 居中弹出） */
+	private static syntheticMenuAnchorEvent(): MouseEvent {
+		const x = Math.floor(window.innerWidth / 2);
+		const y = Math.min(160, Math.floor(window.innerHeight * 0.12));
+		return { clientX: x, clientY: y } as MouseEvent;
+	}
+
 	/** 按设置将笔记在指定 leaf 中打开 */
 	openNoteFile(file: TFile): void {
 		const mode: NoteOpenLocation = this.settings.noteOpenLocation ?? "tab";
@@ -140,45 +172,20 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	}
 
 	/**
-	 * 触发笔记的页面预览（对齐 Quick Explorer：优先走 core page-preview 的 onLinkHover，否则 hover-link）。
-	 * @see https://github.com/pjeby/quick-explorer/blob/master/src/FolderMenu.ts
+	 * 触发笔记的页面预览。仅使用 `workspace.trigger("hover-link", …)`（与 `registerHoverLinkSource` 配套）。
+	 * 不调用 core `page-preview.instance.onLinkHover`：在 Ribbon 菜单里以 `Plugin` 为 HoverParent 时，
+	 * 核心内部会异步拒绝（`undefined.app`），且预览实际已由 `hover-link` 正常显示。
 	 */
 	private triggerNotePagePreview(targetEl: HTMLElement, path: string, event: MouseEvent): void {
 		const sourcePath = this.app.workspace.getActiveFile()?.path ?? "";
-
-		const invokeHoverLink = (): void => {
-			try {
-				this.app.workspace.trigger("hover-link", {
-					event,
-					source: HOVER_LINK_SOURCE_ID,
-					hoverParent: this,
-					targetEl,
-					linktext: path,
-					sourcePath,
-				});
-			} catch {
-				/* 与 hover-link 其它调用方一致，静默失败 */
-			}
-		};
-
-		const pp = getPagePreviewPlugin(this.app);
-		const onLinkHover = pp?.instance?.onLinkHover;
-
-		if (pp?.enabled && typeof onLinkHover === "function") {
-			try {
-				// 须传实际菜单行：传 body 时 page-preview 内部异步链会解析失败（undefined.app）
-				const ret = onLinkHover(this, targetEl, path, sourcePath);
-				void Promise.resolve(ret).catch(() => {
-					invokeHoverLink();
-				});
-				return;
-			} catch {
-				invokeHoverLink();
-				return;
-			}
-		}
-
-		invokeHoverLink();
+		this.app.workspace.trigger("hover-link", {
+			event,
+			source: HOVER_LINK_SOURCE_ID,
+			hoverParent: this,
+			targetEl,
+			linktext: path,
+			sourcePath,
+		});
 	}
 
 	/**
@@ -266,7 +273,8 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			else if (!iconId) item.setTitle(title);
 			else item.setTitle("");
 			item.onClick(onClick);
-			if (isRibbonNoteEntry(entry)) {
+			// 页面预览依赖鼠标悬停；触摸设备无 hover-link 体验，跳过绑定
+			if (isRibbonNoteEntry(entry) && Platform.isDesktop) {
 				queueMicrotask(() => this.bindNoteItemHover(item, entry.path));
 			}
 		});
@@ -278,7 +286,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			return;
 		}
 		const menu = new Menu();
-		// 桌面端须用 DOM 菜单，原生菜单无法触发 hover-link / 页面预览（与 Quick Explorer 一致）
+		// 桌面端须用 DOM 菜单，原生菜单无法触发 hover-link / 页面预览
 		menu.setUseNativeMenu(false);
 
 		const appCommands = (this.app as App & { commands: AppCommands }).commands;
@@ -317,7 +325,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		if (menuContainerEl) setDisplayAttr(menuContainerEl);
 		const inRect = (cx: number, cy: number, r: DOMRect) =>
 			cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
-		const closeIfOutside = (e: MouseEvent) => {
+		const closeIfOutside = (e: PointerEvent) => {
 			const target = e.target as Node;
 			const hitOutside = menuContainerEl && !menuContainerEl.contains(target);
 			const r = folderRibbonEl?.getBoundingClientRect();
@@ -325,11 +333,11 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			if (hitOutside || hitRibbon) {
 				if (folderRibbonEl?.contains(target)) this.skipNextOpenFolderId = folder.id;
 				menu.close();
-				document.removeEventListener("mousedown", closeIfOutside);
+				document.removeEventListener("pointerdown", closeIfOutside, true);
 			}
 		};
-		menu.onHide(() => document.removeEventListener("mousedown", closeIfOutside));
-		setTimeout(() => document.addEventListener("mousedown", closeIfOutside), 0);
+		menu.onHide(() => document.removeEventListener("pointerdown", closeIfOutside, true));
+		setTimeout(() => document.addEventListener("pointerdown", closeIfOutside, true), 0);
 
 		const findMenuDomEl = (atX: number, atY: number): HTMLElement | null => {
 			const fromApi = (menu as unknown as { containerEl?: HTMLElement }).containerEl;
@@ -361,7 +369,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		};
 
 		const setupHoverClose = (attempt = 0) => {
-			if (!openByHover) return;
+			if (!openByHover || !Platform.isDesktop) return;
 			const el = findMenuDomEl(x, y);
 			const ribbonEl = this.ribbonEls.get(folder.id);
 			if (!ribbonEl) return;
