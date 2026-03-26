@@ -1,12 +1,19 @@
-import { App, Menu, MenuItem, Plugin } from "obsidian";
-import type { AppCommands, RibbonFolder, RibbonFolderSettings } from "./types";
-import { DEFAULT_SETTINGS } from "./types";
+import { App, Menu, MenuItem, Plugin, TFile } from "obsidian";
+import type { AppCommands, RibbonFolder, RibbonFolderSettings, RibbonFolderEntry, MenuDisplayMode } from "./types";
+import { DEFAULT_SETTINGS, DEFAULT_COMMAND_MENU_ICON, DEFAULT_NOTE_MENU_ICON, isRibbonNoteEntry } from "./types";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, getIconAspect } from "./utils/icon";
 import { RibbonFolderSettingTab } from "./SettingTab";
 import { t, updateLanguage } from "./i18n";
 
-export type { RibbonFolder, RibbonFolderCommand, RibbonFolderSettings } from "./types";
+export type {
+	RibbonFolder,
+	RibbonFolderCommand,
+	RibbonFolderCommandEntry,
+	RibbonFolderNoteEntry,
+	RibbonFolderEntry,
+	RibbonFolderSettings,
+} from "./types";
 
 const RIBBON_OR_LAYOUT_CLS = /horizontal-main-container|workspace-leaf|workspace-split|mod-root|side-dock-actions|workspace-ribbon|mod-left/;
 
@@ -93,6 +100,69 @@ export default class RibbonFolderPlugin extends Plugin {
 		el.setAttribute("title", name);
 	}
 
+	private async addMenuItemForEntry(
+		menu: Menu,
+		entry: RibbonFolderEntry,
+		ctx: {
+			displayMode: MenuDisplayMode;
+			iconFolder: string;
+			allCommands: { id: string; name: string }[];
+			appCommands: AppCommands;
+		}
+	): Promise<void> {
+		const { displayMode, iconFolder, allCommands, appCommands } = ctx;
+		let title: string;
+		let rawIcon: string | null;
+		let onClick: () => void;
+
+		if (isRibbonNoteEntry(entry)) {
+			const base = entry.path.split("/").pop() ?? entry.path;
+			title = entry.displayName?.trim() || base;
+			rawIcon = entry.icon?.trim() || DEFAULT_NOTE_MENU_ICON;
+			onClick = () => {
+				const f = this.app.vault.getAbstractFileByPath(entry.path);
+				if (f instanceof TFile) {
+					void this.app.workspace.getLeaf(false).openFile(f);
+				}
+			};
+		} else {
+			const cmd = allCommands.find((c) => c.id === entry.id);
+			title = entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
+			rawIcon =
+				entry.icon?.trim() ||
+				(cmd as { icon?: string } | undefined)?.icon ||
+				DEFAULT_COMMAND_MENU_ICON;
+			onClick = () => {
+				void appCommands.executeCommandById(entry.id);
+			};
+		}
+
+		const iconId =
+			rawIcon && displayMode !== "label-only"
+				? await resolveIconId(this.app, iconFolder, rawIcon)
+				: null;
+		menu.addItem((item: MenuItem) => {
+			if (displayMode !== "label-only" && iconId) {
+				item.setIcon(iconId as Parameters<MenuItem["setIcon"]>[0]);
+				const ratio = iconId ? getIconAspect(iconId) ?? 1 : 1;
+				if (ratio >= RibbonFolderPlugin.WIDE_ICON_MIN_RATIO) {
+					setTimeout(() => {
+						const anyItem = item as unknown as { iconEl?: HTMLElement };
+						const svg = anyItem?.iconEl?.querySelector?.("svg.svg-icon") as HTMLElement | null;
+						if (svg) {
+							svg.style.width = `calc(var(--icon-size) * ${ratio})`;
+							svg.style.height = `var(--icon-size)`;
+						}
+					}, 0);
+				}
+			} else if (displayMode === "label-only") item.setIcon(null);
+			if (displayMode !== "icon-only") item.setTitle(title);
+			else if (!iconId) item.setTitle(title);
+			else item.setTitle("");
+			item.onClick(onClick);
+		});
+	}
+
 	private async showFolderMenu(folder: RibbonFolder, evt: MouseEvent, openByHover = false) {
 		if (!openByHover && this.skipNextOpenFolderId === folder.id) {
 			this.skipNextOpenFolderId = null;
@@ -105,40 +175,17 @@ export default class RibbonFolderPlugin extends Plugin {
 
 		const displayMode = folder.menuDisplay ?? "both";
 		for (const entry of folder.commands) {
-			const cmd = allCommands.find((c: { id: string; name: string }) => c.id === entry.id);
-			const title = entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
-			const rawIcon = entry.icon?.trim() || (cmd as { icon?: string } | undefined)?.icon || null;
-			const iconId =
-				rawIcon && displayMode !== "label-only"
-					? await resolveIconId(this.app, iconFolder, rawIcon)
-					: null;
-			menu.addItem((item: MenuItem) => {
-				if (displayMode !== "label-only" && iconId) {
-					item.setIcon(iconId as Parameters<MenuItem["setIcon"]>[0]);
-					const ratio = iconId ? getIconAspect(iconId) ?? 1 : 1;
-					if (ratio >= RibbonFolderPlugin.WIDE_ICON_MIN_RATIO) {
-						// 等待 icon 注入 DOM 后设置宽度
-						setTimeout(() => {
-							const anyItem = item as unknown as { iconEl?: HTMLElement };
-							const svg = anyItem?.iconEl?.querySelector?.("svg.svg-icon") as HTMLElement | null;
-							if (svg) {
-								svg.style.width = `calc(var(--icon-size) * ${ratio})`;
-								svg.style.height = `var(--icon-size)`;
-							}
-						}, 0);
-					}
-				}
-				else if (displayMode === "label-only") item.setIcon(null);
-				if (displayMode !== "icon-only") item.setTitle(title);
-				else if (!iconId) item.setTitle(title);
-				else item.setTitle("");
-				item.onClick(() => appCommands.executeCommandById(entry.id));
+			await this.addMenuItemForEntry(menu, entry, {
+				displayMode,
+				iconFolder,
+				allCommands,
+				appCommands,
 			});
 		}
 
 		if (folder.commands.length === 0) {
 			menu.addItem((item: MenuItem) => {
-				item.setTitle(t("folder.noCommands")).setDisabled(true);
+				item.setTitle(t("folder.noItems")).setDisabled(true);
 			});
 		}
 

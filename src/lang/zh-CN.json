@@ -2,7 +2,7 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder 设置",
-            "description": "创建分组并在 Ribbon 上显示为按钮，点击后弹出菜单执行命令。",
+            "description": "创建分组并在 Ribbon 上显示为按钮，点击后弹出菜单执行命令或打开笔记。",
             "iconFolder": {
                 "name": "图标文件夹",
                 "description": "自定义图标根目录。图标可填 Lucide 名（如 dice）或相对此目录的 .svg（如 add.svg）或库内完整路径。",
@@ -40,11 +40,12 @@
                 "click": "点击显示",
                 "hover": "悬停显示"
             },
-            "commands": "命令",
+            "itemsSection": "命令与笔记",
             "commandsHint": "（拖拽可调整顺序）",
-            "noCommands": "（暂无命令）",
-            "commandsCount": "{{count}} 个命令",
-            "addCommand": "添加命令"
+            "noItems": "（暂无命令或笔记）",
+            "itemsCount": "{{count}} 项",
+            "addCommand": "添加命令",
+            "addNote": "添加笔记"
         },
         "commands": {
             "add": {
@@ -69,7 +70,23 @@
             "editBtn": "编辑",
             "removeBtn": "移除"
         },
+        "notes": {
+            "edit": {
+                "title": "编辑笔记",
+                "path": "笔记路径",
+                "pathDescription": "库内 Markdown 笔记路径（如 文件夹/笔记.md）。",
+                "pathPlaceholder": "路径/笔记.md",
+                "browse": "浏览",
+                "display": "菜单显示名",
+                "displayDescription": "在菜单中显示的名称（留空则使用文件名）",
+                "displayPlaceholder": "显示名称",
+                "icon": "图标",
+                "iconDescription": "Lucide 名（默认：file）或库内 .svg 路径；可点击「选择 SVG」",
+                "iconPlaceholder": "file 或 add.svg"
+            }
+        },
         "modal": {
+            "notePickerPlaceholder": "搜索笔记…",
             "searchPlaceholder": "搜索命令...",
             "svgIcon": {
                 "searchPlaceholder": "搜索 SVG 图标…",

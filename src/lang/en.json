@@ -2,7 +2,7 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder Settings",
-            "description": "Create groups and display them as buttons on the Ribbon that open menus with commands.",
+            "description": "Create groups and display them as buttons on the Ribbon that open menus with commands or notes.",
             "iconFolder": {
                 "name": "Icon Folder",
                 "description": "Custom icon root directory. Icons can be Lucide names (e.g., dice), .svg files relative to this directory (e.g., add.svg), or full paths within your vault.",
@@ -40,11 +40,12 @@
                 "click": "Click to Show",
                 "hover": "Hover to Show"
             },
-            "commands": "Commands",
+            "itemsSection": "Commands & notes",
             "commandsHint": "(drag to reorder)",
-            "noCommands": "(No commands)",
-            "commandsCount": "{{count}} commands",
-            "addCommand": "Add Command"
+            "noItems": "(No commands or notes)",
+            "itemsCount": "{{count}} items",
+            "addCommand": "Add command",
+            "addNote": "Add note"
         },
         "commands": {
             "add": {
@@ -69,7 +70,23 @@
             "editBtn": "Edit",
             "removeBtn": "Remove"
         },
+        "notes": {
+            "edit": {
+                "title": "Edit note",
+                "path": "Note path",
+                "pathDescription": "Vault path to the Markdown note (e.g. Folder/Note.md).",
+                "pathPlaceholder": "path/to/note.md",
+                "browse": "Browse",
+                "display": "Menu label",
+                "displayDescription": "Label in the menu (leave blank to use the file name)",
+                "displayPlaceholder": "Display name",
+                "icon": "Icon",
+                "iconDescription": "Lucide name (default: file) or .svg path; click \"Select SVG\"",
+                "iconPlaceholder": "file or add.svg"
+            }
+        },
         "modal": {
+            "notePickerPlaceholder": "Search notes...",
             "searchPlaceholder": "Search commands...",
             "svgIcon": {
                 "searchPlaceholder": "Search SVG icons...",

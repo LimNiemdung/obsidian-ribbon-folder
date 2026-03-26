@@ -12,19 +12,49 @@ export type MenuDisplayMode = "icon-only" | "label-only" | "both";
 /** 菜单触发方式：点击图标或悬停图标 */
 export type MenuTriggerMode = "click" | "hover";
 
-/** 分组内的一条命令，可自定义在菜单中的显示名与图标 */
-export interface RibbonFolderCommand {
+/** 分组内一条命令（菜单项） */
+export interface RibbonFolderCommandEntry {
+	kind?: "command";
 	id: string;
 	displayName?: string;
-	/** 菜单项图标：Lucide 名（如 dice）或库内 .svg 路径（如 scripts/icons/add.svg） */
+	/** 菜单项图标：Lucide 名（如 dice）或库内 .svg 路径；未填时默认 command */
 	icon?: string;
 }
+
+/** 分组内一条笔记（点击在编辑器中打开） */
+export interface RibbonFolderNoteEntry {
+	kind: "note";
+	/** 库内路径 */
+	path: string;
+	displayName?: string;
+	/** 菜单项图标；未填时默认 file */
+	icon?: string;
+}
+
+export type RibbonFolderEntry = RibbonFolderCommandEntry | RibbonFolderNoteEntry;
+
+/** @deprecated 使用 RibbonFolderCommandEntry */
+export type RibbonFolderCommand = RibbonFolderCommandEntry;
+
+export function isRibbonNoteEntry(e: RibbonFolderEntry): e is RibbonFolderNoteEntry {
+	return e.kind === "note";
+}
+
+export function isRibbonCommandEntry(e: RibbonFolderEntry): e is RibbonFolderCommandEntry {
+	return e.kind !== "note";
+}
+
+/** 命令菜单项默认 Lucide 图标 */
+export const DEFAULT_COMMAND_MENU_ICON = "command";
+/** 笔记菜单项默认 Lucide 图标 */
+export const DEFAULT_NOTE_MENU_ICON = "file";
 
 export interface RibbonFolder {
 	id: string;
 	name: string;
 	icon: string;
-	commands: RibbonFolderCommand[];
+	/** 命令与笔记条目（历史数据仅有 id 无 kind 时视为命令） */
+	commands: RibbonFolderEntry[];
 	/** 菜单中命令的显示方式：仅图标 / 仅标签 / 都显示 */
 	menuDisplay?: MenuDisplayMode;
 	/** 菜单触发方式：点击显示或悬停显示 */

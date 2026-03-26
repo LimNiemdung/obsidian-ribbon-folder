@@ -1,8 +1,11 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
-import type { IRibbonFolderPlugin, RibbonFolder, MenuDisplayMode, MenuTriggerMode } from "./types";
+import type { IRibbonFolderPlugin, RibbonFolder, MenuDisplayMode, MenuTriggerMode, RibbonFolderEntry } from "./types";
+import { isRibbonNoteEntry } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
+import { EditNoteModal } from "./EditNoteModal";
+import { NotePickerModal } from "./NotePickerModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { getSvgPathsInFolder } from "./utils/icon";
 import { t } from "./i18n";
@@ -171,13 +174,21 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		});
 	}
 
-	/** 仅渲染某分组的命令行列表（用于初次渲染或命令拖拽后局部刷新，避免整页 display 导致滚动跳顶） */
+	private entryLabel(entry: RibbonFolderEntry, allCommands: { id: string; name: string }[]): string {
+		if (isRibbonNoteEntry(entry)) {
+			const base = entry.path.split("/").pop() ?? entry.path;
+			return entry.displayName?.trim() || base;
+		}
+		const cmd = allCommands.find((c) => c.id === entry.id);
+		return entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
+	}
+
+	/** 仅渲染某分组的菜单项列表（命令与笔记；拖拽后局部刷新） */
 	private renderFolderCommandRows(cmdListEl: HTMLElement, folder: RibbonFolder, metaEl: HTMLElement): void {
 		cmdListEl.empty();
 		const allCommands = this.plugin.getAllCommands();
 		folder.commands.forEach((entry, cmdIndex) => {
-			const cmd = allCommands.find((c) => c.id === entry.id);
-			const displayName = entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
+			const displayName = this.entryLabel(entry, allCommands);
 			const row = cmdListEl.createDiv({ cls: "ribbon-folder-cmd-row" });
 			row.setAttr("data-command-index", String(cmdIndex));
 			row.draggable = true;
@@ -188,22 +199,33 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
 			editBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
-				new EditCommandModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
-					entry.id = result.id;
-					entry.displayName = result.displayName;
-					entry.icon = result.icon;
-					void this.plugin.saveSettings();
-					metaEl.setText(t("folder.commandsCount", { count: folder.commands.length }));
-					this.display();
-				}).open();
+				if (isRibbonNoteEntry(entry)) {
+					new EditNoteModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
+						entry.path = result.path;
+						entry.displayName = result.displayName;
+						entry.icon = result.icon;
+						void this.plugin.saveSettings();
+						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+						this.display();
+					}).open();
+				} else {
+					new EditCommandModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
+						entry.id = result.id;
+						entry.displayName = result.displayName;
+						entry.icon = result.icon;
+						void this.plugin.saveSettings();
+						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+						this.display();
+					}).open();
+				}
 			});
 			const removeBtn = btnWrap.createEl("button", { text: t("commands.removeBtn") });
 			removeBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				void (async () => {
-					folder.commands = folder.commands.filter((c) => c.id !== entry.id);
+					folder.commands = folder.commands.filter((_, i) => i !== cmdIndex);
 					await this.plugin.saveSettings();
-					metaEl.setText(t("folder.commandsCount", { count: folder.commands.length }));
+					metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
 					this.display();
 				})();
 			});
@@ -286,7 +308,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		const titleEl = header.createSpan({ cls: "ribbon-folder-folder-title", text: folder.name || t("folder.unnamed") });
 		const metaEl = header.createSpan({
 			cls: "ribbon-folder-folder-meta",
-			text: t("folder.commandsCount", { count: folder.commands.length }),
+			text: t("folder.itemsCount", { count: folder.commands.length }),
 		});
 
 		const deleteBtn = header.createEl("button", { cls: "clickable-icon ribbon-folder-folder-delete" });
@@ -410,7 +432,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			});
 
 		const cmdBlock = body.createDiv({ cls: "ribbon-folder-commands-block" });
-		cmdBlock.createEl("strong", { text: t("folder.commands") });
+		cmdBlock.createEl("strong", { text: t("folder.itemsSection") });
 		cmdBlock.createSpan({ text: t("folder.commandsHint"), cls: "ribbon-folder-cmd-hint" });
 
 		const cmdListEl = cmdBlock.createDiv({ cls: "ribbon-folder-cmd-list ribbon-folder-draggable-list" });
@@ -422,10 +444,22 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			.addButton((btn) =>
 				btn.setButtonText(t("folder.addCommand")).onClick(() => {
 					new CommandPickerModal(this.app, (chosenId) => {
-						if (!folder.commands.some((c) => c.id === chosenId)) {
+						if (!folder.commands.some((c) => !isRibbonNoteEntry(c) && c.id === chosenId)) {
 							folder.commands.push({ id: chosenId });
 							void this.plugin.saveSettings();
-							metaEl.setText(t("folder.commandsCount", { count: folder.commands.length }));
+							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+							this.display();
+						}
+					}).open();
+				})
+			)
+			.addButton((btn) =>
+				btn.setButtonText(t("folder.addNote")).onClick(() => {
+					new NotePickerModal(this.app, (file) => {
+						if (!folder.commands.some((c) => isRibbonNoteEntry(c) && c.path === file.path)) {
+							folder.commands.push({ kind: "note", path: file.path });
+							void this.plugin.saveSettings();
+							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
 							this.display();
 						}
 					}).open();
