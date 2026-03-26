@@ -130,8 +130,29 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		await this.plugin.addRibbonForFolder(folder);
 	}
 
+	/** 设置页内容所在的可滚动祖先（empty() 重绘后需恢复 scrollTop，否则会跳回顶部） */
+	private getSettingsScrollParent(): HTMLElement | null {
+		const { containerEl } = this;
+		const byClass = containerEl.closest(".vertical-tab-content") as HTMLElement | null;
+		if (byClass && byClass.scrollHeight > byClass.clientHeight + 1) return byClass;
+		let cur: HTMLElement | null = containerEl.parentElement;
+		while (cur) {
+			const oy = window.getComputedStyle(cur).overflowY;
+			if (
+				(oy === "auto" || oy === "scroll" || oy === "overlay") &&
+				cur.scrollHeight > cur.clientHeight + 1
+			) {
+				return cur;
+			}
+			cur = cur.parentElement;
+		}
+		return byClass;
+	}
+
 	display(): void {
 		const { containerEl } = this;
+		const scrollParent = this.getSettingsScrollParent();
+		const savedScrollTop = scrollParent?.scrollTop ?? 0;
 		// 重绘前保存已展开的分组索引，重绘后恢复，避免命令拖拽等操作后折叠
 		const expandedIndices = new Set<number>();
 		containerEl.querySelectorAll(".ribbon-folder-folder-block.is-expanded").forEach((el) => {
@@ -198,6 +219,16 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				if (chevron) chevron.setText("▾");
 			}
 		});
+
+		// 恢复滚动位置（编辑命令/笔记点确定后会 display()，避免跳回页首）
+		if (scrollParent != null) {
+			const restore = (): void => {
+				scrollParent.scrollTop = savedScrollTop;
+			};
+			queueMicrotask(restore);
+			requestAnimationFrame(restore);
+			window.setTimeout(restore, 0);
+		}
 	}
 
 	private entryLabel(entry: RibbonFolderEntry, allCommands: { id: string; name: string }[]): string {

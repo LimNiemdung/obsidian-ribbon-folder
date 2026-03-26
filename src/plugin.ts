@@ -13,7 +13,6 @@ import type {
 	AppCommands,
 	RibbonFolder,
 	RibbonFolderSettings,
-	RibbonFolderEntry,
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
 	MenuDisplayMode,
