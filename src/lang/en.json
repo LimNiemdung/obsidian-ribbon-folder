@@ -56,7 +56,11 @@
             "addCommand": "Add command",
             "addNote": "Add note",
             "addSeparator": "Add separator",
-            "separatorLabel": "— Separator —"
+            "separatorLabel": "— Separator —",
+            "itemKind": {
+                "command": "Command",
+                "note": "Note"
+            }
         },
         "commands": {
             "add": {

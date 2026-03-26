@@ -1,20 +1,27 @@
-import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, Plugin, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type {
 	IRibbonFolderPlugin,
 	RibbonFolder,
 	MenuDisplayMode,
 	MenuTriggerMode,
 	RibbonFolderEntry,
+	RibbonFolderCommandEntry,
+	RibbonFolderNoteEntry,
 	NoteOpenLocation,
 } from "./types";
-import { isRibbonNoteEntry, isRibbonSeparatorEntry } from "./types";
+import {
+	DEFAULT_COMMAND_MENU_ICON,
+	DEFAULT_NOTE_MENU_ICON,
+	isRibbonNoteEntry,
+	isRibbonSeparatorEntry,
+} from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
 import { EditNoteModal } from "./EditNoteModal";
 import { NotePickerModal } from "./NotePickerModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
-import { getSvgPathsInFolder } from "./utils/icon";
+import { getSvgPathsInFolder, resolveIconId } from "./utils/icon";
 import { t } from "./i18n";
 
 const REBUILD_DEBOUNCE_MS = 300;
@@ -241,18 +248,55 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		return entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
 	}
 
+	private entryKindLabel(entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry): string {
+		if (isRibbonNoteEntry(entry)) return t("folder.itemKind.note");
+		return t("folder.itemKind.command");
+	}
+
+	/** 与弹出菜单一致的图标解析用原始字符串（Lucide 名或 .svg 路径） */
+	private getEntryIconRaw(
+		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry,
+		allCommands: { id: string; name: string; icon?: string }[]
+	): string {
+		if (isRibbonNoteEntry(entry)) {
+			return entry.icon?.trim() || DEFAULT_NOTE_MENU_ICON;
+		}
+		const cmd = allCommands.find((c) => c.id === entry.id);
+		return (
+			entry.icon?.trim() || (cmd as { icon?: string } | undefined)?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON
+		);
+	}
+
 	/** 仅渲染某分组的菜单项列表（命令与笔记；拖拽后局部刷新） */
-	private renderFolderCommandRows(cmdListEl: HTMLElement, folder: RibbonFolder, metaEl: HTMLElement): void {
+	private async renderFolderCommandRows(
+		cmdListEl: HTMLElement,
+		folder: RibbonFolder,
+		metaEl: HTMLElement
+	): Promise<void> {
 		cmdListEl.empty();
 		const allCommands = this.plugin.getAllCommands();
-		folder.commands.forEach((entry, cmdIndex) => {
+		const iconFolder = this.plugin.settings.iconFolder ?? "";
+		for (let cmdIndex = 0; cmdIndex < folder.commands.length; cmdIndex++) {
+			const entry = folder.commands[cmdIndex];
 			const displayName = this.entryLabel(entry, allCommands);
 			const row = cmdListEl.createDiv({ cls: "ribbon-folder-cmd-row" });
 			row.setAttr("data-command-index", String(cmdIndex));
 			row.draggable = true;
 			row.addClass("ribbon-folder-draggable-row");
 
-			row.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
+			const main = row.createDiv({ cls: "ribbon-folder-cmd-row-main" });
+			if (isRibbonSeparatorEntry(entry)) {
+				main.addClass("ribbon-folder-cmd-row-main--separator");
+				main.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
+			} else {
+				const iconWrap = main.createSpan({ cls: "ribbon-folder-cmd-row-icon" });
+				const iconId = await resolveIconId(this.plugin.app, iconFolder, this.getEntryIconRaw(entry, allCommands));
+				setIcon(iconWrap, iconId);
+				const textWrap = main.createDiv({ cls: "ribbon-folder-cmd-row-text" });
+				textWrap.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
+				textWrap.createSpan({ cls: "ribbon-folder-cmd-row-kind", text: this.entryKindLabel(entry) });
+			}
+
 			if (isRibbonSeparatorEntry(entry)) row.addClass("ribbon-folder-cmd-row-separator");
 			const btnWrap = row.createSpan({ cls: "ribbon-folder-cmd-row-btns" });
 			if (!isRibbonSeparatorEntry(entry)) {
@@ -322,10 +366,10 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				void (async () => {
 					await this.plugin.saveSettings();
 					cmdListEl.empty();
-					this.renderFolderCommandRows(cmdListEl, folder, metaEl);
+					await this.renderFolderCommandRows(cmdListEl, folder, metaEl);
 				})();
 			});
-		});
+		}
 	}
 
 	private async addNewFolder() {
@@ -497,7 +541,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		cmdBlock.createSpan({ text: t("folder.commandsHint"), cls: "ribbon-folder-cmd-hint" });
 
 		const cmdListEl = cmdBlock.createDiv({ cls: "ribbon-folder-cmd-list ribbon-folder-draggable-list" });
-		this.renderFolderCommandRows(cmdListEl, folder, metaEl);
+		void this.renderFolderCommandRows(cmdListEl, folder, metaEl);
 
 		const addRow = cmdBlock.createDiv({ cls: "ribbon-folder-cmd-actions" });
 		new Setting(addRow)

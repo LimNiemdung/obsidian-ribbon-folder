@@ -56,7 +56,11 @@
             "addCommand": "添加命令",
             "addNote": "添加笔记",
             "addSeparator": "添加分隔行",
-            "separatorLabel": "— 分隔线 —"
+            "separatorLabel": "— 分隔线 —",
+            "itemKind": {
+                "command": "命令",
+                "note": "笔记"
+            }
         },
         "commands": {
             "add": {
