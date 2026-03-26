@@ -169,7 +169,7 @@
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	gap: 0.45em;
+	gap: 8px;
 }
 
 .ribbon-folder-cmd-row-text .ribbon-folder-cmd-row-label {
@@ -182,10 +182,11 @@
 
 .ribbon-folder-cmd-row-text .ribbon-folder-cmd-row-kind {
 	flex-shrink: 0;
-	font-size: 0.72em;
+	font-size: 10px;
 	font-weight: 500;
+	letter-spacing: 0.05em;
 	line-height: 1.2;
-	padding: 0.15em 0.45em;
+	padding: 2px 4px;
 	border-radius: 4px;
 	background: var(--background-modifier-hover);
 	color: var(--text-muted);
