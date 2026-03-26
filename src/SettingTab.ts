@@ -1,5 +1,12 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
-import type { IRibbonFolderPlugin, RibbonFolder, MenuDisplayMode, MenuTriggerMode, RibbonFolderEntry } from "./types";
+import type {
+	IRibbonFolderPlugin,
+	RibbonFolder,
+	MenuDisplayMode,
+	MenuTriggerMode,
+	RibbonFolderEntry,
+	NoteOpenLocation,
+} from "./types";
 import { isRibbonNoteEntry } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { ConfirmModal } from "./ConfirmModal";
@@ -19,6 +26,11 @@ const MENU_DISPLAY_OPTIONS: Record<MenuDisplayMode, string> = {
 const TRIGGER_MODE_OPTIONS: Record<MenuTriggerMode, string> = {
 	click: t("folder.triggerModeOptions.click"),
 	hover: t("folder.triggerModeOptions.hover"),
+};
+const NOTE_OPEN_OPTIONS: Record<NoteOpenLocation, string> = {
+	tab: t("settings.noteOpenLocation.options.tab"),
+	current: t("settings.noteOpenLocation.options.current"),
+	split: t("settings.noteOpenLocation.options.split"),
 };
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -146,6 +158,20 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 						})();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName(t("settings.noteOpenLocation.name"))
+			.setDesc(t("settings.noteOpenLocation.description"))
+			.addDropdown((dropdown) => {
+				(Object.keys(NOTE_OPEN_OPTIONS) as NoteOpenLocation[]).forEach((k) => {
+					void dropdown.addOption(k, NOTE_OPEN_OPTIONS[k]);
+				});
+				dropdown.setValue(this.plugin.settings.noteOpenLocation ?? "tab");
+				dropdown.onChange((value) => {
+					this.plugin.settings.noteOpenLocation = value as NoteOpenLocation;
+					void this.plugin.saveSettings();
+				});
+			});
 
 		new Setting(containerEl)
 			.setName(t("settings.addFolder.name"))

@@ -13,7 +13,16 @@
                 "description": "Add a new button group to the Ribbon"
             },
             "groupsList": "Groups List",
-            "groupsListDescription": "Click group rows to expand/collapse; drag handles to reorder groups."
+            "groupsListDescription": "Click group rows to expand/collapse; drag handles to reorder groups.",
+            "noteOpenLocation": {
+                "name": "Open notes from menu in",
+                "description": "Where to open a note when you click it in a Ribbon Folder menu.",
+                "options": {
+                    "tab": "New tab",
+                    "current": "Existing tab",
+                    "split": "Split"
+                }
+            }
         },
         "folder": {
             "delete": "Delete Group",

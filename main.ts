@@ -6,4 +6,5 @@ export type {
 	RibbonFolderNoteEntry,
 	RibbonFolderEntry,
 	RibbonFolderSettings,
+	NoteOpenLocation,
 } from "./src/plugin";

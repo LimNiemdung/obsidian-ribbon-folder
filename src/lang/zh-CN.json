@@ -13,7 +13,16 @@
                 "description": "在 Ribbon 上添加一个新按钮组"
             },
             "groupsList": "分组列表",
-            "groupsListDescription": "点击分组行展开/收起；拖拽左侧把手可调整分组顺序。"
+            "groupsListDescription": "点击分组行展开/收起；拖拽左侧把手可调整分组顺序。",
+            "noteOpenLocation": {
+                "name": "笔记菜单项打开位置",
+                "description": "在分组菜单中点击笔记时，在何处打开该笔记。",
+                "options": {
+                    "tab": "新标签页",
+                    "current": "当前标签页",
+                    "split": "分屏"
+                }
+            }
         },
         "folder": {
             "delete": "删除分组",

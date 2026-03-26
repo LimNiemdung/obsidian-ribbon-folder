@@ -1,5 +1,12 @@
-import { App, Menu, MenuItem, Plugin, TFile } from "obsidian";
-import type { AppCommands, RibbonFolder, RibbonFolderSettings, RibbonFolderEntry, MenuDisplayMode } from "./types";
+import { App, Menu, MenuItem, Plugin, TFile, type HoverParent, type HoverPopover } from "obsidian";
+import type {
+	AppCommands,
+	RibbonFolder,
+	RibbonFolderSettings,
+	RibbonFolderEntry,
+	MenuDisplayMode,
+	NoteOpenLocation,
+} from "./types";
 import { DEFAULT_SETTINGS, DEFAULT_COMMAND_MENU_ICON, DEFAULT_NOTE_MENU_ICON, isRibbonNoteEntry } from "./types";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, getIconAspect } from "./utils/icon";
@@ -13,11 +20,33 @@ export type {
 	RibbonFolderNoteEntry,
 	RibbonFolderEntry,
 	RibbonFolderSettings,
+	NoteOpenLocation,
 } from "./types";
 
 const RIBBON_OR_LAYOUT_CLS = /horizontal-main-container|workspace-leaf|workspace-split|mod-root|side-dock-actions|workspace-ribbon|mod-left/;
 
-export default class RibbonFolderPlugin extends Plugin {
+const HOVER_LINK_SOURCE_ID = "ribbon-folder";
+
+/** 核心「页面预览」插件实例（与 Quick Explorer 相同用法，非公开 API） */
+type PagePreviewPlugin = {
+	enabled?: boolean;
+	instance?: {
+		onLinkHover?: (
+			hoverParent: HoverParent,
+			target: HTMLElement,
+			linktext: string,
+			sourcePath: string
+		) => void;
+	};
+};
+
+function getPagePreviewPlugin(app: App): PagePreviewPlugin | undefined {
+	return (app as unknown as { internalPlugins?: { plugins?: Record<string, PagePreviewPlugin> } }).internalPlugins
+		?.plugins?.["page-preview"];
+}
+
+export default class RibbonFolderPlugin extends Plugin implements HoverParent {
+	hoverPopover: HoverPopover | null = null;
 	settings: RibbonFolderSettings;
 	private ribbonEls: Map<string, HTMLElement> = new Map();
 	private skipNextOpenFolderId: string | null = null;
@@ -27,6 +56,11 @@ export default class RibbonFolderPlugin extends Plugin {
 		await this.loadSettings();
 		await this.rebuildRibbons();
 		this.addSettingTab(new RibbonFolderSettingTab(this.app, this));
+
+		this.registerHoverLinkSource(HOVER_LINK_SOURCE_ID, {
+			display: this.manifest.name,
+			defaultMod: false,
+		});
 
 		// 初始化语言（按当前 Obsidian 语言环境）
 		updateLanguage();
@@ -91,6 +125,78 @@ export default class RibbonFolderPlugin extends Plugin {
 		}
 	}
 
+	/** 按设置将笔记在指定 leaf 中打开 */
+	openNoteFile(file: TFile): void {
+		const mode: NoteOpenLocation = this.settings.noteOpenLocation ?? "tab";
+		let leaf;
+		if (mode === "tab") {
+			leaf = this.app.workspace.getLeaf("tab");
+		} else if (mode === "split") {
+			leaf = this.app.workspace.getLeaf("split");
+		} else {
+			leaf = this.app.workspace.getLeaf(false);
+		}
+		void leaf.openFile(file);
+	}
+
+	/**
+	 * 触发笔记的页面预览（对齐 Quick Explorer：优先走 core page-preview 的 onLinkHover，否则 hover-link）。
+	 * @see https://github.com/pjeby/quick-explorer/blob/master/src/FolderMenu.ts
+	 */
+	private triggerNotePagePreview(targetEl: HTMLElement, path: string, event: MouseEvent): void {
+		const sourcePath = this.app.workspace.getActiveFile()?.path ?? "";
+
+		const invokeHoverLink = (): void => {
+			try {
+				this.app.workspace.trigger("hover-link", {
+					event,
+					source: HOVER_LINK_SOURCE_ID,
+					hoverParent: this,
+					targetEl,
+					linktext: path,
+					sourcePath,
+				});
+			} catch {
+				/* 与 hover-link 其它调用方一致，静默失败 */
+			}
+		};
+
+		const pp = getPagePreviewPlugin(this.app);
+		const onLinkHover = pp?.instance?.onLinkHover;
+
+		if (pp?.enabled && typeof onLinkHover === "function") {
+			try {
+				// 须传实际菜单行：传 body 时 page-preview 内部异步链会解析失败（undefined.app）
+				const ret = onLinkHover(this, targetEl, path, sourcePath);
+				void Promise.resolve(ret).catch(() => {
+					invokeHoverLink();
+				});
+				return;
+			} catch {
+				invokeHoverLink();
+				return;
+			}
+		}
+
+		invokeHoverLink();
+	}
+
+	/**
+	 * 在 MenuItem 创建后把悬停绑到其 `dom` 上（与 Quick Explorer 一致）。
+	 * 勿依赖 `menu.containerEl`：部分版本在 showAtPosition 后仍为空。
+	 */
+	private bindNoteItemHover(item: MenuItem, path: string, retriesLeft = 25): void {
+		const el = (item as unknown as { dom?: HTMLElement }).dom;
+		if (el instanceof HTMLElement) {
+			el.addEventListener("mouseenter", (e: MouseEvent) => {
+				this.triggerNotePagePreview(el, path, e);
+			});
+			return;
+		}
+		if (retriesLeft <= 0) return;
+		window.setTimeout(() => this.bindNoteItemHover(item, path, retriesLeft - 1), 16);
+	}
+
 	/** 仅更新已有按钮的 tooltip/标题，不删除不重建，避免与 rebuildRibbons 竞态导致重复按钮 */
 	updateRibbonDisplay(folder: RibbonFolder): void {
 		const el = this.ribbonEls.get(folder.id);
@@ -122,7 +228,7 @@ export default class RibbonFolderPlugin extends Plugin {
 			onClick = () => {
 				const f = this.app.vault.getAbstractFileByPath(entry.path);
 				if (f instanceof TFile) {
-					void this.app.workspace.getLeaf(false).openFile(f);
+					this.openNoteFile(f);
 				}
 			};
 		} else {
@@ -160,6 +266,9 @@ export default class RibbonFolderPlugin extends Plugin {
 			else if (!iconId) item.setTitle(title);
 			else item.setTitle("");
 			item.onClick(onClick);
+			if (isRibbonNoteEntry(entry)) {
+				queueMicrotask(() => this.bindNoteItemHover(item, entry.path));
+			}
 		});
 	}
 
@@ -169,6 +278,9 @@ export default class RibbonFolderPlugin extends Plugin {
 			return;
 		}
 		const menu = new Menu();
+		// 桌面端须用 DOM 菜单，原生菜单无法触发 hover-link / 页面预览（与 Quick Explorer 一致）
+		menu.setUseNativeMenu(false);
+
 		const appCommands = (this.app as App & { commands: AppCommands }).commands;
 		const allCommands = appCommands.listCommands();
 		const iconFolder = this.settings.iconFolder ?? "";
@@ -199,7 +311,9 @@ export default class RibbonFolderPlugin extends Plugin {
 		menu.showAtPosition({ x, y });
 
 		const setDisplayAttr = (el: HTMLElement) => el.setAttribute("data-ribbon-folder-display", displayMode);
-		const menuContainerEl = (menu as unknown as { containerEl: HTMLElement }).containerEl;
+		const menuContainerEl =
+			(menu as unknown as { containerEl?: HTMLElement; dom?: HTMLElement }).containerEl ??
+			(menu as unknown as { dom?: HTMLElement }).dom;
 		if (menuContainerEl) setDisplayAttr(menuContainerEl);
 		const inRect = (cx: number, cy: number, r: DOMRect) =>
 			cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
