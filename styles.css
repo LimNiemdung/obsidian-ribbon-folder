@@ -129,6 +129,12 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
+.ribbon-folder-cmd-row-separator .ribbon-folder-cmd-row-label {
+	opacity: 0.8;
+	font-style: italic;
+	color: var(--text-muted);
+}
+
 .ribbon-folder-cmd-row-btns {
 	display: flex;
 	gap: 0.35em;

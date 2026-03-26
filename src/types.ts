@@ -34,7 +34,12 @@ export interface RibbonFolderNoteEntry {
 	icon?: string;
 }
 
-export type RibbonFolderEntry = RibbonFolderCommandEntry | RibbonFolderNoteEntry;
+/** 分组内一条分隔线（仅视觉分隔，无点击） */
+export interface RibbonFolderSeparatorEntry {
+	kind: "separator";
+}
+
+export type RibbonFolderEntry = RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderSeparatorEntry;
 
 /** @deprecated 使用 RibbonFolderCommandEntry */
 export type RibbonFolderCommand = RibbonFolderCommandEntry;
@@ -43,8 +48,12 @@ export function isRibbonNoteEntry(e: RibbonFolderEntry): e is RibbonFolderNoteEn
 	return e.kind === "note";
 }
 
+export function isRibbonSeparatorEntry(e: RibbonFolderEntry): e is RibbonFolderSeparatorEntry {
+	return e.kind === "separator";
+}
+
 export function isRibbonCommandEntry(e: RibbonFolderEntry): e is RibbonFolderCommandEntry {
-	return e.kind !== "note";
+	return e.kind !== "note" && e.kind !== "separator";
 }
 
 /** 命令菜单项默认 Lucide 图标 */

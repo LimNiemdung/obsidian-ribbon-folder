@@ -7,7 +7,7 @@ import type {
 	RibbonFolderEntry,
 	NoteOpenLocation,
 } from "./types";
-import { isRibbonNoteEntry } from "./types";
+import { isRibbonNoteEntry, isRibbonSeparatorEntry } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
@@ -201,6 +201,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	}
 
 	private entryLabel(entry: RibbonFolderEntry, allCommands: { id: string; name: string }[]): string {
+		if (isRibbonSeparatorEntry(entry)) return t("folder.separatorLabel");
 		if (isRibbonNoteEntry(entry)) {
 			const base = entry.path.split("/").pop() ?? entry.path;
 			return entry.displayName?.trim() || base;
@@ -221,30 +222,33 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			row.addClass("ribbon-folder-draggable-row");
 
 			row.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
+			if (isRibbonSeparatorEntry(entry)) row.addClass("ribbon-folder-cmd-row-separator");
 			const btnWrap = row.createSpan({ cls: "ribbon-folder-cmd-row-btns" });
-			const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
-			editBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				if (isRibbonNoteEntry(entry)) {
-					new EditNoteModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
-						entry.path = result.path;
-						entry.displayName = result.displayName;
-						entry.icon = result.icon;
-						void this.plugin.saveSettings();
-						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-						this.display();
-					}).open();
-				} else {
-					new EditCommandModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
-						entry.id = result.id;
-						entry.displayName = result.displayName;
-						entry.icon = result.icon;
-						void this.plugin.saveSettings();
-						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-						this.display();
-					}).open();
-				}
-			});
+			if (!isRibbonSeparatorEntry(entry)) {
+				const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
+				editBtn.addEventListener("click", (e) => {
+					e.stopPropagation();
+					if (isRibbonNoteEntry(entry)) {
+						new EditNoteModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
+							entry.path = result.path;
+							entry.displayName = result.displayName;
+							entry.icon = result.icon;
+							void this.plugin.saveSettings();
+							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+							this.display();
+						}).open();
+					} else {
+						new EditCommandModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
+							entry.id = result.id;
+							entry.displayName = result.displayName;
+							entry.icon = result.icon;
+							void this.plugin.saveSettings();
+							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+							this.display();
+						}).open();
+					}
+				});
+			}
 			const removeBtn = btnWrap.createEl("button", { text: t("commands.removeBtn") });
 			removeBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
@@ -470,7 +474,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			.addButton((btn) =>
 				btn.setButtonText(t("folder.addCommand")).onClick(() => {
 					new CommandPickerModal(this.app, (chosenId) => {
-						if (!folder.commands.some((c) => !isRibbonNoteEntry(c) && c.id === chosenId)) {
+						if (!folder.commands.some((c) => !isRibbonNoteEntry(c) && !isRibbonSeparatorEntry(c) && c.id === chosenId)) {
 							folder.commands.push({ id: chosenId });
 							void this.plugin.saveSettings();
 							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
@@ -489,6 +493,14 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 							this.display();
 						}
 					}).open();
+				})
+			)
+			.addButton((btn) =>
+				btn.setButtonText(t("folder.addSeparator")).onClick(() => {
+					folder.commands.push({ kind: "separator" });
+					void this.plugin.saveSettings();
+					metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+					this.display();
 				})
 			);
 

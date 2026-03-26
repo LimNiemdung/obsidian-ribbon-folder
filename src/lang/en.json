@@ -54,7 +54,9 @@
             "noItems": "(No commands or notes)",
             "itemsCount": "{{count}} items",
             "addCommand": "Add command",
-            "addNote": "Add note"
+            "addNote": "Add note",
+            "addSeparator": "Add separator",
+            "separatorLabel": "— Separator —"
         },
         "commands": {
             "add": {

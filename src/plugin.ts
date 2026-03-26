@@ -14,10 +14,18 @@ import type {
 	RibbonFolder,
 	RibbonFolderSettings,
 	RibbonFolderEntry,
+	RibbonFolderCommandEntry,
+	RibbonFolderNoteEntry,
 	MenuDisplayMode,
 	NoteOpenLocation,
 } from "./types";
-import { DEFAULT_SETTINGS, DEFAULT_COMMAND_MENU_ICON, DEFAULT_NOTE_MENU_ICON, isRibbonNoteEntry } from "./types";
+import {
+	DEFAULT_SETTINGS,
+	DEFAULT_COMMAND_MENU_ICON,
+	DEFAULT_NOTE_MENU_ICON,
+	isRibbonNoteEntry,
+	isRibbonSeparatorEntry,
+} from "./types";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, getIconAspect } from "./utils/icon";
 import { RibbonFolderSettingTab } from "./SettingTab";
@@ -28,6 +36,7 @@ export type {
 	RibbonFolderCommand,
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
+	RibbonFolderSeparatorEntry,
 	RibbonFolderEntry,
 	RibbonFolderSettings,
 	NoteOpenLocation,
@@ -215,7 +224,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 
 	private async addMenuItemForEntry(
 		menu: Menu,
-		entry: RibbonFolderEntry,
+		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry,
 		ctx: {
 			displayMode: MenuDisplayMode;
 			iconFolder: string;
@@ -294,13 +303,13 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		const iconFolder = this.settings.iconFolder ?? "";
 
 		const displayMode = folder.menuDisplay ?? "both";
+		const ctx = { displayMode, iconFolder, allCommands, appCommands };
 		for (const entry of folder.commands) {
-			await this.addMenuItemForEntry(menu, entry, {
-				displayMode,
-				iconFolder,
-				allCommands,
-				appCommands,
-			});
+			if (isRibbonSeparatorEntry(entry)) {
+				menu.addSeparator();
+				continue;
+			}
+			await this.addMenuItemForEntry(menu, entry, ctx);
 		}
 
 		if (folder.commands.length === 0) {
