@@ -141,8 +141,9 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	/** 设置页内容所在的可滚动祖先（empty() 重绘后需恢复 scrollTop，否则会跳回顶部） */
 	private getSettingsScrollParent(): HTMLElement | null {
 		const { containerEl } = this;
-		const byClass = containerEl.closest(".vertical-tab-content") as HTMLElement | null;
-		if (byClass && byClass.scrollHeight > byClass.clientHeight + 1) return byClass;
+		const byClassEl = containerEl.closest(".vertical-tab-content");
+		const byClass = byClassEl instanceof HTMLElement ? byClassEl : null;
+		if (byClass instanceof HTMLElement && byClass.scrollHeight > byClass.clientHeight + 1) return byClass;
 		let cur: HTMLElement | null = containerEl.parentElement;
 		while (cur) {
 			const oy = window.getComputedStyle(cur).overflowY;

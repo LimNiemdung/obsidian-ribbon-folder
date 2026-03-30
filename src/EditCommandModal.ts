@@ -1,5 +1,5 @@
 import { App, Modal, Setting } from "obsidian";
-import type { RibbonFolderCommand } from "./types";
+import type { RibbonFolderCommandEntry } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { listCommandsWithIcons } from "./utils/commands";
@@ -15,7 +15,7 @@ export type EditCommandResult = {
 export class EditCommandModal extends Modal {
 	constructor(
 		app: App,
-		private entry: RibbonFolderCommand,
+		private entry: RibbonFolderCommandEntry,
 		private iconFolder: string,
 		private onConfirm: (result: EditCommandResult) => void
 	) {

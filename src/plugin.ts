@@ -35,7 +35,6 @@ import { t, updateLanguage } from "./i18n";
 export type {
 	CommandListItem,
 	RibbonFolder,
-	RibbonFolderCommand,
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
 	RibbonFolderSeparatorEntry,
