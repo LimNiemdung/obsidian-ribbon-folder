@@ -2,7 +2,7 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder 设置",
-            "description": "创建分组并在 Ribbon 上显示为按钮，点击后弹出菜单执行命令或打开笔记。",
+            "description": "创建分组并在 Ribbon 上显示为按钮，点击后弹出菜单执行命令、打开笔记或在浏览器中打开网页。",
             "iconFolder": {
                 "name": "图标文件夹",
                 "description": "自定义图标根目录。图标可填 Lucide 名（如 dice）或相对此目录的 .svg（如 add.svg）或库内完整路径。",
@@ -49,17 +49,19 @@
                 "click": "点击显示",
                 "hover": "悬停显示"
             },
-            "itemsSection": "命令与笔记",
+            "itemsSection": "命令、笔记与网页",
             "commandsHint": "（拖拽可调整顺序）",
-            "noItems": "（暂无命令或笔记）",
+            "noItems": "（暂无菜单项）",
             "itemsCount": "{{count}} 项",
             "addCommand": "添加命令",
             "addNote": "添加笔记",
+            "addWeb": "添加网页",
             "addSeparator": "添加分隔行",
             "separatorLabel": "— 分隔线 —",
             "itemKind": {
                 "command": "命令",
-                "note": "笔记"
+                "note": "笔记",
+                "web": "网页"
             }
         },
         "commands": {
@@ -84,6 +86,21 @@
             },
             "editBtn": "编辑",
             "removeBtn": "移除"
+        },
+        "web": {
+            "openBlocked": "无法打开该链接（地址无效或不安全）。",
+            "edit": {
+                "title": "编辑网页",
+                "url": "网址",
+                "urlDescription": "完整 URL（https://…）或域名；未写协议时默认使用 https。",
+                "urlPlaceholder": "https://example.com 或 example.com",
+                "display": "菜单显示名",
+                "displayDescription": "在菜单中显示的名称（留空则显示网址）",
+                "displayPlaceholder": "显示名称",
+                "icon": "图标",
+                "iconDescription": "Lucide 名（默认：globe）或库内 .svg 路径；可点击「选择 SVG」",
+                "iconPlaceholder": "globe 或 add.svg"
+            }
         },
         "notes": {
             "edit": {

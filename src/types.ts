@@ -37,12 +37,26 @@ export interface RibbonFolderNoteEntry {
 	icon?: string;
 }
 
+/** 分组内一条网页（点击在系统浏览器中打开） */
+export interface RibbonFolderWebEntry {
+	kind: "web";
+	/** 完整 URL 或可补全为 https 的域名（如 example.com/path） */
+	url: string;
+	displayName?: string;
+	/** 菜单项图标；未填时默认 globe */
+	icon?: string;
+}
+
 /** 分组内一条分隔线（仅视觉分隔，无点击） */
 export interface RibbonFolderSeparatorEntry {
 	kind: "separator";
 }
 
-export type RibbonFolderEntry = RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderSeparatorEntry;
+export type RibbonFolderEntry =
+	| RibbonFolderCommandEntry
+	| RibbonFolderNoteEntry
+	| RibbonFolderWebEntry
+	| RibbonFolderSeparatorEntry;
 
 /** @deprecated 使用 RibbonFolderCommandEntry */
 export type RibbonFolderCommand = RibbonFolderCommandEntry;
@@ -55,20 +69,26 @@ export function isRibbonSeparatorEntry(e: RibbonFolderEntry): e is RibbonFolderS
 	return e.kind === "separator";
 }
 
+export function isRibbonWebEntry(e: RibbonFolderEntry): e is RibbonFolderWebEntry {
+	return e.kind === "web";
+}
+
 export function isRibbonCommandEntry(e: RibbonFolderEntry): e is RibbonFolderCommandEntry {
-	return e.kind !== "note" && e.kind !== "separator";
+	return e.kind !== "note" && e.kind !== "separator" && e.kind !== "web";
 }
 
 /** 命令菜单项默认 Lucide 图标 */
 export const DEFAULT_COMMAND_MENU_ICON = "command";
 /** 笔记菜单项默认 Lucide 图标 */
 export const DEFAULT_NOTE_MENU_ICON = "file";
+/** 网页菜单项默认 Lucide 图标 */
+export const DEFAULT_WEB_MENU_ICON = "globe";
 
 export interface RibbonFolder {
 	id: string;
 	name: string;
 	icon: string;
-	/** 命令与笔记条目（历史数据仅有 id 无 kind 时视为命令） */
+	/** 命令、笔记与网页条目（历史数据仅有 id 无 kind 时视为命令） */
 	commands: RibbonFolderEntry[];
 	/** 菜单中命令的显示方式：仅图标 / 仅标签 / 都显示 */
 	menuDisplay?: MenuDisplayMode;

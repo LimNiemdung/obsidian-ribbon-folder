@@ -16,6 +16,7 @@ import type {
 	RibbonFolderSettings,
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
+	RibbonFolderWebEntry,
 	MenuDisplayMode,
 	NoteOpenLocation,
 } from "./types";
@@ -23,9 +24,12 @@ import {
 	DEFAULT_SETTINGS,
 	DEFAULT_COMMAND_MENU_ICON,
 	DEFAULT_NOTE_MENU_ICON,
+	DEFAULT_WEB_MENU_ICON,
 	isRibbonNoteEntry,
 	isRibbonSeparatorEntry,
+	isRibbonWebEntry,
 } from "./types";
+import { isUrlSafeToOpen, normalizeExternalUrl } from "./utils/url";
 import { listCommandsWithIcons } from "./utils/commands";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, getIconAspect } from "./utils/icon";
@@ -37,6 +41,7 @@ export type {
 	RibbonFolder,
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
+	RibbonFolderWebEntry,
 	RibbonFolderSeparatorEntry,
 	RibbonFolderEntry,
 	RibbonFolderSettings,
@@ -225,7 +230,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 
 	private async addMenuItemForEntry(
 		menu: Menu,
-		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry,
+		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry,
 		ctx: {
 			displayMode: MenuDisplayMode;
 			iconFolder: string;
@@ -247,6 +252,17 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 				if (f instanceof TFile) {
 					this.openNoteFile(f);
 				}
+			};
+		} else if (isRibbonWebEntry(entry)) {
+			title = entry.displayName?.trim() || entry.url.trim();
+			rawIcon = entry.icon?.trim() || DEFAULT_WEB_MENU_ICON;
+			onClick = () => {
+				const normalized = normalizeExternalUrl(entry.url);
+				if (!normalized || !isUrlSafeToOpen(normalized)) {
+					new Notice(t("web.openBlocked"));
+					return;
+				}
+				window.open(normalized, "_blank", "noopener,noreferrer");
 			};
 		} else {
 			const cmd = allCommands.find((c) => c.id === entry.id);

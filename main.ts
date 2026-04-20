@@ -4,6 +4,7 @@ export type {
 	RibbonFolder,
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
+	RibbonFolderWebEntry,
 	RibbonFolderSeparatorEntry,
 	RibbonFolderEntry,
 	RibbonFolderSettings,

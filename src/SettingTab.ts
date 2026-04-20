@@ -8,22 +8,28 @@ import type {
 	RibbonFolderEntry,
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
+	RibbonFolderWebEntry,
 	NoteOpenLocation,
 } from "./types";
 import {
 	DEFAULT_COMMAND_MENU_ICON,
 	DEFAULT_NOTE_MENU_ICON,
+	DEFAULT_WEB_MENU_ICON,
+	isRibbonCommandEntry,
 	isRibbonNoteEntry,
 	isRibbonSeparatorEntry,
+	isRibbonWebEntry,
 } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
 import { EditNoteModal } from "./EditNoteModal";
+import { EditWebModal } from "./EditWebModal";
 import { NotePickerModal } from "./NotePickerModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { getSvgPathsInFolder, resolveIconId } from "./utils/icon";
 import { t } from "./i18n";
+import { normalizeExternalUrl } from "./utils/url";
 
 const REBUILD_DEBOUNCE_MS = 300;
 const MENU_DISPLAY_OPTIONS: Record<MenuDisplayMode, string> = {
@@ -246,28 +252,35 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			const base = entry.path.split("/").pop() ?? entry.path;
 			return entry.displayName?.trim() || base;
 		}
+		if (isRibbonWebEntry(entry)) {
+			return entry.displayName?.trim() || entry.url.trim();
+		}
 		const cmd = allCommands.find((c) => c.id === entry.id);
 		return entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
 	}
 
-	private entryKindLabel(entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry): string {
+	private entryKindLabel(entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry): string {
 		if (isRibbonNoteEntry(entry)) return t("folder.itemKind.note");
+		if (isRibbonWebEntry(entry)) return t("folder.itemKind.web");
 		return t("folder.itemKind.command");
 	}
 
 	/** 与弹出菜单一致的图标解析用原始字符串（Lucide 名或 .svg 路径） */
 	private getEntryIconRaw(
-		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry,
+		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry,
 		allCommands: CommandListItem[]
 	): string {
 		if (isRibbonNoteEntry(entry)) {
 			return entry.icon?.trim() || DEFAULT_NOTE_MENU_ICON;
 		}
+		if (isRibbonWebEntry(entry)) {
+			return entry.icon?.trim() || DEFAULT_WEB_MENU_ICON;
+		}
 		const cmd = allCommands.find((c) => c.id === entry.id);
 		return entry.icon?.trim() || cmd?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON;
 	}
 
-	/** 仅渲染某分组的菜单项列表（命令与笔记；拖拽后局部刷新） */
+	/** 仅渲染某分组的菜单项列表（命令、笔记与网页；拖拽后局部刷新） */
 	private async renderFolderCommandRows(
 		cmdListEl: HTMLElement,
 		folder: RibbonFolder,
@@ -306,6 +319,15 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					if (isRibbonNoteEntry(entry)) {
 						new EditNoteModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
 							entry.path = result.path;
+							entry.displayName = result.displayName;
+							entry.icon = result.icon;
+							void this.plugin.saveSettings();
+							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+							this.display();
+						}).open();
+					} else if (isRibbonWebEntry(entry)) {
+						new EditWebModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
+							entry.url = result.url;
 							entry.displayName = result.displayName;
 							entry.icon = result.icon;
 							void this.plugin.saveSettings();
@@ -549,7 +571,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			.addButton((btn) =>
 				btn.setButtonText(t("folder.addCommand")).onClick(() => {
 					new CommandPickerModal(this.app, (chosenId) => {
-						if (!folder.commands.some((c) => !isRibbonNoteEntry(c) && !isRibbonSeparatorEntry(c) && c.id === chosenId)) {
+						if (!folder.commands.some((c) => isRibbonCommandEntry(c) && c.id === chosenId)) {
 							folder.commands.push({ id: chosenId });
 							void this.plugin.saveSettings();
 							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
@@ -567,6 +589,27 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
 							this.display();
 						}
+					}).open();
+				})
+			)
+			.addButton((btn) =>
+				btn.setButtonText(t("folder.addWeb")).onClick(() => {
+					const draft: RibbonFolderWebEntry = { kind: "web", url: "" };
+					new EditWebModal(this.app, draft, this.plugin.settings.iconFolder ?? "", (result) => {
+						const normalized = normalizeExternalUrl(result.url);
+						if (!normalized) return;
+						if (folder.commands.some((c) => isRibbonWebEntry(c) && normalizeExternalUrl(c.url) === normalized)) {
+							return;
+						}
+						folder.commands.push({
+							kind: "web",
+							url: result.url.trim(),
+							displayName: result.displayName,
+							icon: result.icon,
+						});
+						void this.plugin.saveSettings();
+						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+						this.display();
 					}).open();
 				})
 			)

@@ -2,7 +2,7 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder Settings",
-            "description": "Create groups and display them as buttons on the Ribbon that open menus with commands or notes.",
+            "description": "Create groups and display them as buttons on the Ribbon that open menus with commands, notes, or web links.",
             "iconFolder": {
                 "name": "Icon Folder",
                 "description": "Custom icon root directory. Icons can be Lucide names (e.g., dice), .svg files relative to this directory (e.g., add.svg), or full paths within your vault.",
@@ -49,17 +49,19 @@
                 "click": "Click to Show",
                 "hover": "Hover to Show"
             },
-            "itemsSection": "Commands & notes",
+            "itemsSection": "Commands, notes & web",
             "commandsHint": "(drag to reorder)",
-            "noItems": "(No commands or notes)",
+            "noItems": "(No menu items)",
             "itemsCount": "{{count}} items",
             "addCommand": "Add command",
             "addNote": "Add note",
+            "addWeb": "Add web link",
             "addSeparator": "Add separator",
             "separatorLabel": "— Separator —",
             "itemKind": {
                 "command": "Command",
-                "note": "Note"
+                "note": "Note",
+                "web": "Web"
             }
         },
         "commands": {
@@ -84,6 +86,21 @@
             },
             "editBtn": "Edit",
             "removeBtn": "Remove"
+        },
+        "web": {
+            "openBlocked": "Cannot open this link (invalid or unsafe URL).",
+            "edit": {
+                "title": "Edit web link",
+                "url": "URL",
+                "urlDescription": "Full URL (https://…) or a hostname; https is assumed when no scheme is given.",
+                "urlPlaceholder": "https://example.com or example.com",
+                "display": "Menu label",
+                "displayDescription": "Label in the menu (leave blank to use the URL)",
+                "displayPlaceholder": "Display name",
+                "icon": "Icon",
+                "iconDescription": "Lucide name (default: globe) or .svg path; click \"Select SVG\"",
+                "iconPlaceholder": "globe or add.svg"
+            }
         },
         "notes": {
             "edit": {
