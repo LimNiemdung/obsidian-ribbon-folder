@@ -4,6 +4,7 @@ import { NotePickerModal } from "./NotePickerModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { getSvgPathsInFolder } from "./utils/icon";
 import { t } from "./i18n";
+import { entryDisplayLabelKeys } from "./utils/editLabels";
 
 export type EditNoteResult = {
 	path: string;
@@ -16,7 +17,8 @@ export class EditNoteModal extends Modal {
 		app: App,
 		private entry: RibbonFolderNoteEntry,
 		private iconFolder: string,
-		private onConfirm: (result: EditNoteResult) => void
+		private onConfirm: (result: EditNoteResult) => void,
+		private forPin = false
 	) {
 		super(app);
 	}
@@ -46,13 +48,14 @@ export class EditNoteModal extends Modal {
 			})
 		);
 
+		const displayLabels = entryDisplayLabelKeys(this.forPin, "notes");
 		let displayNameInput: HTMLInputElement;
 		new Setting(contentEl)
-			.setName(t("notes.edit.display"))
-			.setDesc(t("notes.edit.displayDescription"))
+			.setName(t(displayLabels.name))
+			.setDesc(t(displayLabels.description))
 			.addText((text) => {
 				displayNameInput = text.inputEl;
-				text.setPlaceholder(t("notes.edit.displayPlaceholder")).setValue(this.entry.displayName?.trim() ?? "");
+				text.setPlaceholder(t(displayLabels.placeholder)).setValue(this.entry.displayName?.trim() ?? "");
 			});
 
 		let iconInput: HTMLInputElement;

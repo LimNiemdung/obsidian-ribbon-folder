@@ -9,17 +9,16 @@ import type {
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
 	RibbonFolderWebEntry,
+	RibbonPin,
 	NoteOpenLocation,
 } from "./types";
 import {
-	DEFAULT_COMMAND_MENU_ICON,
-	DEFAULT_NOTE_MENU_ICON,
-	DEFAULT_WEB_MENU_ICON,
 	isRibbonCommandEntry,
 	isRibbonNoteEntry,
 	isRibbonSeparatorEntry,
 	isRibbonWebEntry,
 } from "./types";
+import { getEntryIconRaw, getEntryLabel } from "./utils/entry";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
@@ -46,6 +45,10 @@ const NOTE_OPEN_OPTIONS: Record<NoteOpenLocation, string> = {
 	current: t("settings.noteOpenLocation.options.current"),
 	split: t("settings.noteOpenLocation.options.split"),
 };
+
+type SettingsTabId = "general" | "pins" | "groups";
+
+const SETTINGS_TAB_IDS: SettingsTabId[] = ["general", "pins", "groups"];
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -109,6 +112,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	private rebuildRibbonsTimer: number | null = null;
 	/** 按 folderId 防抖，避免名称/图标每输入一字就移除并重建该分组按钮 */
 	private refreshFolderTimers = new Map<string, number>();
+	private activeSettingsTab: SettingsTabId = "general";
 
 	constructor(app: App, plugin: Plugin) {
 		super(app, plugin);
@@ -144,6 +148,31 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		await this.plugin.addRibbonForFolder(folder);
 	}
 
+	private scheduleRefreshRibbonForPin(pin: RibbonPin): void {
+		const id = pin.id;
+		const existing = this.refreshFolderTimers.get(id);
+		if (existing != null) clearTimeout(existing);
+		this.refreshFolderTimers.set(
+			id,
+			window.setTimeout(() => {
+				this.refreshFolderTimers.delete(id);
+				void this.refreshRibbonForPin(pin);
+			}, REBUILD_DEBOUNCE_MS)
+		);
+	}
+
+	private async refreshRibbonForPin(pin: RibbonPin): Promise<void> {
+		this.plugin.removeRibbonForPin(pin.id);
+		await this.plugin.addRibbonForPin(pin);
+	}
+
+	private get pins(): RibbonPin[] {
+		if (!this.plugin.settings.pins) {
+			this.plugin.settings.pins = [];
+		}
+		return this.plugin.settings.pins;
+	}
+
 	/** 设置页内容所在的可滚动祖先（empty() 重绘后需恢复 scrollTop，否则会跳回顶部） */
 	private getSettingsScrollParent(): HTMLElement | null {
 		const { containerEl } = this;
@@ -164,22 +193,80 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		return byClass;
 	}
 
+	private readActiveTabFromDom(): SettingsTabId | null {
+		const el = this.containerEl.querySelector(".ribbon-folder-settings-tab.is-active");
+		const id = el?.getAttribute("data-tab");
+		if (id === "general" || id === "pins" || id === "groups") return id;
+		return null;
+	}
+
+	private showSettingsTab(tabId: SettingsTabId, tabsContainer: HTMLElement, panels: HTMLElement[]): void {
+		this.activeSettingsTab = tabId;
+		tabsContainer.querySelectorAll(".ribbon-folder-settings-tab").forEach((el) => {
+			el.classList.toggle("is-active", el.getAttribute("data-tab") === tabId);
+		});
+		panels.forEach((panel) => {
+			panel.classList.toggle("is-active", panel.getAttribute("data-panel") === tabId);
+		});
+	}
+
 	display(): void {
 		const { containerEl } = this;
 		const scrollParent = this.getSettingsScrollParent();
 		const savedScrollTop = scrollParent?.scrollTop ?? 0;
-		// 重绘前保存已展开的分组索引，重绘后恢复，避免命令拖拽等操作后折叠
 		const expandedIndices = new Set<number>();
 		containerEl.querySelectorAll(".ribbon-folder-folder-block.is-expanded").forEach((el) => {
 			const idx = el.getAttribute("data-folder-index");
 			if (idx !== null) expandedIndices.add(parseInt(idx, 10));
 		});
+		const domTab = this.readActiveTabFromDom();
+		if (domTab) this.activeSettingsTab = domTab;
+
 		containerEl.empty();
 
 		new Setting(containerEl).setName(t("settings.title")).setHeading();
-		new Setting(containerEl).setName("").setDesc(t("settings.description"));
 
-		new Setting(containerEl)
+		const tabsContainer = containerEl.createDiv({ cls: "ribbon-folder-settings-tabs" });
+		const panels: HTMLElement[] = [];
+		const tabLabels: Record<SettingsTabId, string> = {
+			general: t("settings.tabs.general"),
+			pins: t("settings.tabs.pins"),
+			groups: t("settings.tabs.groups"),
+		};
+
+		for (const tabId of SETTINGS_TAB_IDS) {
+			const tab = tabsContainer.createDiv({
+				cls: "ribbon-folder-settings-tab",
+				text: tabLabels[tabId],
+			});
+			tab.setAttribute("data-tab", tabId);
+			tab.classList.toggle("is-active", tabId === this.activeSettingsTab);
+			tab.addEventListener("click", () => this.showSettingsTab(tabId, tabsContainer, panels));
+
+			const panel = containerEl.createDiv({ cls: "ribbon-folder-settings-panel" });
+			panel.setAttribute("data-panel", tabId);
+			panel.classList.toggle("is-active", tabId === this.activeSettingsTab);
+			panels.push(panel);
+
+			if (tabId === "general") this.renderGeneralTab(panel);
+			else if (tabId === "pins") this.renderPinsTab(panel);
+			else this.renderGroupsTab(panel, expandedIndices);
+		}
+
+		if (scrollParent != null) {
+			const restore = (): void => {
+				scrollParent.scrollTop = savedScrollTop;
+			};
+			queueMicrotask(restore);
+			requestAnimationFrame(restore);
+			window.setTimeout(restore, 0);
+		}
+	}
+
+	private renderGeneralTab(parent: HTMLElement): void {
+		new Setting(parent).setName("").setDesc(t("settings.description"));
+
+		new Setting(parent)
 			.setName(t("settings.iconFolder.name"))
 			.setDesc(t("settings.iconFolder.description"))
 			.addText((text) =>
@@ -195,7 +282,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					})
 			);
 
-		new Setting(containerEl)
+		new Setting(parent)
 			.setName(t("settings.noteOpenLocation.name"))
 			.setDesc(t("settings.noteOpenLocation.description"))
 			.addDropdown((dropdown) => {
@@ -208,8 +295,91 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					void this.plugin.saveSettings();
 				});
 			});
+	}
 
-		new Setting(containerEl)
+	private renderPinsTab(parent: HTMLElement): void {
+		new Setting(parent).setName(t("settings.pinsList")).setHeading();
+		new Setting(parent).setName("").setDesc(t("settings.pinsListDescription"));
+
+		const pinsWrap = parent.createDiv({ cls: "ribbon-folder-pins-wrap" });
+		const pinListEl = pinsWrap.createDiv({ cls: "ribbon-folder-cmd-list ribbon-folder-draggable-list" });
+		void this.renderPinRows(pinListEl);
+
+		const pinAddRow = pinsWrap.createDiv({ cls: "ribbon-folder-cmd-actions" });
+		new Setting(pinAddRow)
+			.setName("")
+			.addButton((btn) =>
+				btn.setButtonText(t("folder.addCommand")).onClick(() => {
+					new CommandPickerModal(this.app, (chosenId) => {
+						if (this.pins.some((p) => isRibbonCommandEntry(p.entry) && p.entry.id === chosenId)) {
+							return;
+						}
+						const pin: RibbonPin = { id: "pin-" + Date.now(), entry: { id: chosenId } };
+						this.pins.push(pin);
+						void (async () => {
+							await this.plugin.addRibbonForPin(pin);
+							await this.plugin.saveSettings();
+							this.activeSettingsTab = "pins";
+							this.display();
+						})();
+					}).open();
+				})
+			)
+			.addButton((btn) =>
+				btn.setButtonText(t("folder.addNote")).onClick(() => {
+					new NotePickerModal(this.app, (file) => {
+						if (this.pins.some((p) => isRibbonNoteEntry(p.entry) && p.entry.path === file.path)) {
+							return;
+						}
+						const pin: RibbonPin = { id: "pin-" + Date.now(), entry: { kind: "note", path: file.path } };
+						this.pins.push(pin);
+						void (async () => {
+							await this.plugin.addRibbonForPin(pin);
+							await this.plugin.saveSettings();
+							this.activeSettingsTab = "pins";
+							this.display();
+						})();
+					}).open();
+				})
+			)
+			.addButton((btn) =>
+				btn.setButtonText(t("folder.addWeb")).onClick(() => {
+					const draft: RibbonFolderWebEntry = { kind: "web", url: "" };
+					new EditWebModal(
+						this.app,
+						draft,
+						this.plugin.settings.iconFolder ?? "",
+						(result) => {
+							const normalized = normalizeExternalUrl(result.url);
+							if (!normalized) return;
+							if (this.pins.some((p) => isRibbonWebEntry(p.entry) && normalizeExternalUrl(p.entry.url) === normalized)) {
+								return;
+							}
+							const pin: RibbonPin = {
+								id: "pin-" + Date.now(),
+								entry: {
+									kind: "web",
+									url: result.url.trim(),
+									displayName: result.displayName,
+									icon: result.icon,
+								},
+							};
+							this.pins.push(pin);
+							void (async () => {
+								await this.plugin.addRibbonForPin(pin);
+								await this.plugin.saveSettings();
+								this.activeSettingsTab = "pins";
+								this.display();
+							})();
+						},
+						true
+					).open();
+				})
+			);
+	}
+
+	private renderGroupsTab(parent: HTMLElement, expandedIndices: Set<number>): void {
+		new Setting(parent)
 			.setName(t("settings.addFolder.name"))
 			.setDesc(t("settings.addFolder.description"))
 			.addButton((btn) =>
@@ -218,14 +388,13 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				})
 			);
 
-		new Setting(containerEl).setName(t("settings.groupsList")).setHeading();
-		new Setting(containerEl).setName("").setDesc(t("settings.groupsListDescription"));
+		new Setting(parent).setName(t("settings.groupsList")).setHeading();
+		new Setting(parent).setName("").setDesc(t("settings.groupsListDescription"));
 
-		const listWrap = containerEl.createDiv({ cls: "ribbon-folder-folders-wrap" });
+		const listWrap = parent.createDiv({ cls: "ribbon-folder-folders-wrap" });
 		for (let i = 0; i < this.plugin.settings.folders.length; i++) {
 			this.renderFolderBlock(listWrap, this.plugin.settings.folders[i], i);
 		}
-		// 恢复之前展开的分组
 		expandedIndices.forEach((idx) => {
 			const block = listWrap.querySelector(`.ribbon-folder-folder-block[data-folder-index="${idx}"]`);
 			if (block) {
@@ -234,29 +403,11 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				if (chevron) chevron.setText("▾");
 			}
 		});
-
-		// 恢复滚动位置（编辑命令/笔记点确定后会 display()，避免跳回页首）
-		if (scrollParent != null) {
-			const restore = (): void => {
-				scrollParent.scrollTop = savedScrollTop;
-			};
-			queueMicrotask(restore);
-			requestAnimationFrame(restore);
-			window.setTimeout(restore, 0);
-		}
 	}
 
 	private entryLabel(entry: RibbonFolderEntry, allCommands: CommandListItem[]): string {
 		if (isRibbonSeparatorEntry(entry)) return t("folder.separatorLabel");
-		if (isRibbonNoteEntry(entry)) {
-			const base = entry.path.split("/").pop() ?? entry.path;
-			return entry.displayName?.trim() || base;
-		}
-		if (isRibbonWebEntry(entry)) {
-			return entry.displayName?.trim() || entry.url.trim();
-		}
-		const cmd = allCommands.find((c) => c.id === entry.id);
-		return entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
+		return getEntryLabel(entry, allCommands);
 	}
 
 	private entryKindLabel(entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry): string {
@@ -266,18 +417,127 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	}
 
 	/** 与弹出菜单一致的图标解析用原始字符串（Lucide 名或 .svg 路径） */
-	private getEntryIconRaw(
+	private openEditEntryModal(
 		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry,
-		allCommands: CommandListItem[]
-	): string {
+		onSaved: () => void,
+		forPin = false
+	): void {
+		const iconFolder = this.plugin.settings.iconFolder ?? "";
 		if (isRibbonNoteEntry(entry)) {
-			return entry.icon?.trim() || DEFAULT_NOTE_MENU_ICON;
+			new EditNoteModal(this.app, entry, iconFolder, (result) => {
+				entry.path = result.path;
+				entry.displayName = result.displayName;
+				entry.icon = result.icon;
+				onSaved();
+			}, forPin).open();
+		} else if (isRibbonWebEntry(entry)) {
+			new EditWebModal(this.app, entry, iconFolder, (result) => {
+				entry.url = result.url;
+				entry.displayName = result.displayName;
+				entry.icon = result.icon;
+				onSaved();
+			}, forPin).open();
+		} else {
+			new EditCommandModal(this.app, entry, iconFolder, (result) => {
+				entry.id = result.id;
+				entry.displayName = result.displayName;
+				entry.icon = result.icon;
+				onSaved();
+			}, forPin).open();
 		}
-		if (isRibbonWebEntry(entry)) {
-			return entry.icon?.trim() || DEFAULT_WEB_MENU_ICON;
+	}
+
+	/** Ribbon 快捷项列表（拖拽排序） */
+	private async renderPinRows(listEl: HTMLElement): Promise<void> {
+		listEl.empty();
+		const allCommands = this.plugin.getAllCommands();
+		const iconFolder = this.plugin.settings.iconFolder ?? "";
+		const pins = this.pins;
+		if (pins.length === 0) {
+			listEl.createSpan({ text: t("settings.pinsEmpty"), cls: "ribbon-folder-cmd-hint" });
+			return;
 		}
-		const cmd = allCommands.find((c) => c.id === entry.id);
-		return entry.icon?.trim() || cmd?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON;
+		for (let pinIndex = 0; pinIndex < pins.length; pinIndex++) {
+			const pin = pins[pinIndex];
+			const entry = pin.entry;
+			const displayName = getEntryLabel(entry, allCommands);
+			const row = listEl.createDiv({ cls: "ribbon-folder-cmd-row" });
+			row.setAttr("data-pin-index", String(pinIndex));
+			row.draggable = true;
+			row.addClass("ribbon-folder-draggable-row");
+
+			const main = row.createDiv({ cls: "ribbon-folder-cmd-row-main" });
+			const iconWrap = main.createSpan({ cls: "ribbon-folder-cmd-row-icon" });
+			const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, allCommands));
+			setIcon(iconWrap, iconId);
+			const textWrap = main.createDiv({ cls: "ribbon-folder-cmd-row-text" });
+			textWrap.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
+			textWrap.createSpan({ cls: "ribbon-folder-cmd-row-kind", text: this.entryKindLabel(entry) });
+
+			const btnWrap = row.createSpan({ cls: "ribbon-folder-cmd-row-btns" });
+			const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
+			editBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.openEditEntryModal(
+					entry,
+					() => {
+						void (async () => {
+							await this.plugin.saveSettings();
+							this.plugin.updatePinRibbonDisplay(pin);
+							this.scheduleRefreshRibbonForPin(pin);
+							listEl.empty();
+							await this.renderPinRows(listEl);
+						})();
+					},
+					true
+				);
+			});
+			const removeBtn = btnWrap.createEl("button", { text: t("commands.removeBtn") });
+			removeBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				void (async () => {
+					this.plugin.settings.pins = this.pins.filter((_, i) => i !== pinIndex);
+					this.plugin.removeRibbonForPin(pin.id);
+					await this.plugin.saveSettings();
+					this.display();
+				})();
+			});
+
+			row.addEventListener("dragstart", (e: DragEvent) => {
+				e.stopPropagation();
+				if (!e.dataTransfer) return;
+				e.dataTransfer.setData("application/x-ribbon-pin-index", String(pinIndex));
+				e.dataTransfer.effectAllowed = "move";
+				row.addClass("ribbon-folder-dragging");
+			});
+			row.addEventListener("dragend", () => row.removeClass("ribbon-folder-dragging"));
+			row.addEventListener("dragover", (e: DragEvent) => {
+				e.preventDefault();
+				e.stopPropagation();
+				if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+				row.addClass("ribbon-folder-drag-over");
+			});
+			row.addEventListener("dragleave", (e: DragEvent) => {
+				e.stopPropagation();
+				row.removeClass("ribbon-folder-drag-over");
+			});
+			row.addEventListener("drop", (e: DragEvent) => {
+				e.preventDefault();
+				e.stopPropagation();
+				row.removeClass("ribbon-folder-drag-over");
+				const fromIndex = parseInt(e.dataTransfer?.getData("application/x-ribbon-pin-index") ?? "", 10);
+				const toIndex = pinIndex;
+				if (Number.isNaN(fromIndex) || fromIndex === toIndex) return;
+				const item = this.pins[fromIndex];
+				this.pins.splice(fromIndex, 1);
+				this.pins.splice(toIndex, 0, item);
+				void (async () => {
+					await this.plugin.saveSettings();
+					await this.plugin.rebuildRibbons();
+					this.display();
+				})();
+			});
+		}
 	}
 
 	/** 仅渲染某分组的菜单项列表（命令、笔记与网页；拖拽后局部刷新） */
@@ -303,7 +563,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				main.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
 			} else {
 				const iconWrap = main.createSpan({ cls: "ribbon-folder-cmd-row-icon" });
-				const iconId = await resolveIconId(this.plugin.app, iconFolder, this.getEntryIconRaw(entry, allCommands));
+				const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, allCommands));
 				setIcon(iconWrap, iconId);
 				const textWrap = main.createDiv({ cls: "ribbon-folder-cmd-row-text" });
 				textWrap.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
@@ -316,34 +576,11 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
 				editBtn.addEventListener("click", (e) => {
 					e.stopPropagation();
-					if (isRibbonNoteEntry(entry)) {
-						new EditNoteModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
-							entry.path = result.path;
-							entry.displayName = result.displayName;
-							entry.icon = result.icon;
-							void this.plugin.saveSettings();
-							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-							this.display();
-						}).open();
-					} else if (isRibbonWebEntry(entry)) {
-						new EditWebModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
-							entry.url = result.url;
-							entry.displayName = result.displayName;
-							entry.icon = result.icon;
-							void this.plugin.saveSettings();
-							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-							this.display();
-						}).open();
-					} else {
-						new EditCommandModal(this.app, entry, this.plugin.settings.iconFolder ?? "", (result) => {
-							entry.id = result.id;
-							entry.displayName = result.displayName;
-							entry.icon = result.icon;
-							void this.plugin.saveSettings();
-							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-							this.display();
-						}).open();
-					}
+					this.openEditEntryModal(entry, () => {
+						void this.plugin.saveSettings();
+						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+						this.display();
+					});
 				});
 			}
 			const removeBtn = btnWrap.createEl("button", { text: t("commands.removeBtn") });

@@ -2,7 +2,15 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder Settings",
-            "description": "Create groups and display them as buttons on the Ribbon that open menus with commands, notes, or web links.",
+            "description": "Pin commands, notes, or web links directly on the Ribbon, or group them behind folder buttons with pop-up menus.",
+            "tabs": {
+                "general": "General",
+                "pins": "Shortcuts",
+                "groups": "Groups"
+            },
+            "pinsList": "Ribbon shortcuts",
+            "pinsListDescription": "Each shortcut appears as its own Ribbon button.",
+            "pinsEmpty": "(No shortcuts yet—use the buttons below to add one)",
             "iconFolder": {
                 "name": "Icon Folder",
                 "description": "Custom icon root directory. Icons can be Lucide names (e.g., dice), .svg files relative to this directory (e.g., add.svg), or full paths within your vault.",
@@ -15,8 +23,8 @@
             "groupsList": "Groups List",
             "groupsListDescription": "Click group rows to expand/collapse; drag handles to reorder groups.",
             "noteOpenLocation": {
-                "name": "Open notes from menu in",
-                "description": "Where to open a note when you click it in a Ribbon Folder menu.",
+                "name": "Open notes in",
+                "description": "Where to open a note when you click it from a Ribbon shortcut or group menu.",
                 "options": {
                     "tab": "New tab",
                     "current": "Existing tab",
@@ -116,6 +124,13 @@
                 "iconDescription": "Lucide name (default: file) or .svg path; click \"Select SVG\"",
                 "iconPlaceholder": "file or add.svg"
             }
+        },
+        "pinEdit": {
+            "display": "Button tooltip",
+            "displayDescriptionCommand": "Tooltip on the ribbon action button (leave blank to use the command name)",
+            "displayDescriptionNote": "Tooltip on the ribbon action button (leave blank to use the file name)",
+            "displayDescriptionWeb": "Tooltip on the ribbon action button (leave blank to use the URL)",
+            "displayPlaceholder": "Custom label"
         },
         "plugin": {
             "openGroupMenu": "Ribbon Folder: Open group menu…",

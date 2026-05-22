@@ -14,22 +14,18 @@ import type {
 	CommandListItem,
 	RibbonFolder,
 	RibbonFolderSettings,
-	RibbonFolderCommandEntry,
-	RibbonFolderNoteEntry,
-	RibbonFolderWebEntry,
+	RibbonPin,
 	MenuDisplayMode,
 	NoteOpenLocation,
 } from "./types";
 import {
 	DEFAULT_SETTINGS,
-	DEFAULT_COMMAND_MENU_ICON,
-	DEFAULT_NOTE_MENU_ICON,
-	DEFAULT_WEB_MENU_ICON,
 	isRibbonNoteEntry,
 	isRibbonSeparatorEntry,
 	isRibbonWebEntry,
 } from "./types";
 import { isUrlSafeToOpen, normalizeExternalUrl } from "./utils/url";
+import { getEntryIconRaw, getEntryLabel, type RibbonActionEntry } from "./utils/entry";
 import { listCommandsWithIcons } from "./utils/commands";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, getIconAspect } from "./utils/icon";
@@ -44,6 +40,8 @@ export type {
 	RibbonFolderWebEntry,
 	RibbonFolderSeparatorEntry,
 	RibbonFolderEntry,
+	RibbonPin,
+	RibbonPinEntry,
 	RibbonFolderSettings,
 	NoteOpenLocation,
 } from "./types";
@@ -85,12 +83,21 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		if (!this.settings.pins) {
+			this.settings.pins = [];
+		}
 		const usedIds = new Set<string>();
 		this.settings.folders.forEach((folder, i) => {
 			if (!folder.id || usedIds.has(folder.id)) {
 				folder.id = "folder-" + Date.now() + "-" + i;
 			}
 			usedIds.add(folder.id);
+		});
+		this.settings.pins.forEach((pin, i) => {
+			if (!pin.id || usedIds.has(pin.id)) {
+				pin.id = "pin-" + Date.now() + "-" + i;
+			}
+			usedIds.add(pin.id);
 		});
 	}
 
@@ -103,6 +110,9 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		const iconFolder = this.settings.iconFolder ?? "";
 		for (const folder of this.settings.folders) {
 			await this.addRibbonForFolder(folder, iconFolder);
+		}
+		for (const pin of this.settings.pins ?? []) {
+			await this.addRibbonForPin(pin, iconFolder);
 		}
 	}
 
@@ -133,11 +143,43 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	}
 
 	removeRibbonForFolder(folderId: string) {
-		const el = this.ribbonEls.get(folderId);
+		this.removeRibbonEl(folderId);
+	}
+
+	removeRibbonForPin(pinId: string) {
+		this.removeRibbonEl(pinId);
+	}
+
+	private removeRibbonEl(id: string) {
+		const el = this.ribbonEls.get(id);
 		if (el) {
 			el.remove();
-			this.ribbonEls.delete(folderId);
+			this.ribbonEls.delete(id);
 		}
+	}
+
+	async addRibbonForPin(pin: RibbonPin, iconFolder?: string) {
+		const base = iconFolder ?? this.settings.iconFolder ?? "";
+		const allCommands = listCommandsWithIcons(this.app);
+		const { title, onClick } = this.resolveEntryAction(pin.entry, allCommands);
+		const rawIcon = getEntryIconRaw(pin.entry, allCommands);
+		const iconId = await resolveIconId(this.app, base, rawIcon);
+		const el = this.addRibbonIcon(iconId, title, onClick);
+		if (isRibbonNoteEntry(pin.entry) && Platform.isDesktop) {
+			const notePath = pin.entry.path;
+			el.addEventListener("mouseenter", (e: MouseEvent) => {
+				this.triggerNotePagePreview(el, notePath, e);
+			});
+		}
+		this.ribbonEls.set(pin.id, el);
+	}
+
+	updatePinRibbonDisplay(pin: RibbonPin): void {
+		const el = this.ribbonEls.get(pin.id);
+		if (!el) return;
+		const title = getEntryLabel(pin.entry, listCommandsWithIcons(this.app));
+		el.setAttribute("aria-label", title);
+		el.setAttribute("title", title);
 	}
 
 	/** 命令面板：打开分组菜单（移动端侧栏 Ribbon 不便时可用；仅一个分组时直接打开） */
@@ -228,25 +270,14 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		el.setAttribute("title", name);
 	}
 
-	private async addMenuItemForEntry(
-		menu: Menu,
-		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry,
-		ctx: {
-			displayMode: MenuDisplayMode;
-			iconFolder: string;
-			allCommands: CommandListItem[];
-			appCommands: AppCommands;
-		}
-	): Promise<void> {
-		const { displayMode, iconFolder, allCommands, appCommands } = ctx;
-		let title: string;
-		let rawIcon: string | null;
+	private resolveEntryAction(
+		entry: RibbonActionEntry,
+		allCommands: CommandListItem[]
+	): { title: string; onClick: () => void } {
+		const appCommands = (this.app as App & { commands: AppCommands }).commands;
+		const title = getEntryLabel(entry, allCommands);
 		let onClick: () => void;
-
 		if (isRibbonNoteEntry(entry)) {
-			const base = entry.path.split("/").pop() ?? entry.path;
-			title = entry.displayName?.trim() || base;
-			rawIcon = entry.icon?.trim() || DEFAULT_NOTE_MENU_ICON;
 			onClick = () => {
 				const f = this.app.vault.getAbstractFileByPath(entry.path);
 				if (f instanceof TFile) {
@@ -254,8 +285,6 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 				}
 			};
 		} else if (isRibbonWebEntry(entry)) {
-			title = entry.displayName?.trim() || entry.url.trim();
-			rawIcon = entry.icon?.trim() || DEFAULT_WEB_MENU_ICON;
 			onClick = () => {
 				const normalized = normalizeExternalUrl(entry.url);
 				if (!normalized || !isUrlSafeToOpen(normalized)) {
@@ -265,14 +294,25 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 				window.open(normalized, "_blank", "noopener,noreferrer");
 			};
 		} else {
-			const cmd = allCommands.find((c) => c.id === entry.id);
-			title = entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
-			rawIcon =
-				entry.icon?.trim() || cmd?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON;
 			onClick = () => {
 				void appCommands.executeCommandById(entry.id);
 			};
 		}
+		return { title, onClick };
+	}
+
+	private async addMenuItemForEntry(
+		menu: Menu,
+		entry: RibbonActionEntry,
+		ctx: {
+			displayMode: MenuDisplayMode;
+			iconFolder: string;
+			allCommands: CommandListItem[];
+		}
+	): Promise<void> {
+		const { displayMode, iconFolder, allCommands } = ctx;
+		const { title, onClick } = this.resolveEntryAction(entry, allCommands);
+		const rawIcon = getEntryIconRaw(entry, allCommands);
 
 		const iconId =
 			rawIcon && displayMode !== "label-only"
@@ -313,12 +353,11 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		// 桌面端须用 DOM 菜单，原生菜单无法触发 hover-link / 页面预览
 		menu.setUseNativeMenu(false);
 
-		const appCommands = (this.app as App & { commands: AppCommands }).commands;
 		const allCommands = listCommandsWithIcons(this.app);
 		const iconFolder = this.settings.iconFolder ?? "";
 
 		const displayMode = folder.menuDisplay ?? "both";
-		const ctx = { displayMode, iconFolder, allCommands, appCommands };
+		const ctx = { displayMode, iconFolder, allCommands };
 		for (const entry of folder.commands) {
 			if (isRibbonSeparatorEntry(entry)) {
 				menu.addSeparator();

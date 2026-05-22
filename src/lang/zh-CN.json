@@ -2,7 +2,15 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder 设置",
-            "description": "创建分组并在 Ribbon 上显示为按钮，点击后弹出菜单执行命令、打开笔记或在浏览器中打开网页。",
+            "description": "可将命令、笔记或网页直接钉在 Ribbon 上，也可收纳到分组按钮的弹出菜单中。",
+            "tabs": {
+                "general": "通用",
+                "pins": "快捷项",
+                "groups": "分组项"
+            },
+            "pinsList": "Ribbon 快捷项",
+            "pinsListDescription": "每个快捷项在 Ribbon 上占一个独立按钮。",
+            "pinsEmpty": "（暂无快捷项，可用下方按钮添加）",
             "iconFolder": {
                 "name": "图标文件夹",
                 "description": "自定义图标根目录。图标可填 Lucide 名（如 dice）或相对此目录的 .svg（如 add.svg）或库内完整路径。",
@@ -15,8 +23,8 @@
             "groupsList": "分组列表",
             "groupsListDescription": "点击分组行展开/收起；拖拽左侧把手可调整分组顺序。",
             "noteOpenLocation": {
-                "name": "笔记菜单项打开位置",
-                "description": "在分组菜单中点击笔记时，在何处打开该笔记。",
+                "name": "打开笔记的位置",
+                "description": "从 Ribbon 快捷项或分组菜单打开笔记时，在何处打开。",
                 "options": {
                     "tab": "新标签页",
                     "current": "当前标签页",
@@ -116,6 +124,13 @@
                 "iconDescription": "Lucide 名（默认：file）或库内 .svg 路径；可点击「选择 SVG」",
                 "iconPlaceholder": "file 或 add.svg"
             }
+        },
+        "pinEdit": {
+            "display": "按钮说明",
+            "displayDescriptionCommand": "功能区按钮的悬停提示（留空则使用命令名）",
+            "displayDescriptionNote": "功能区按钮的悬停提示（留空则使用文件名）",
+            "displayDescriptionWeb": "功能区按钮的悬停提示（留空则使用网址）",
+            "displayPlaceholder": "自定义说明"
         },
         "plugin": {
             "openGroupMenu": "Ribbon Folder：打开分组菜单…",

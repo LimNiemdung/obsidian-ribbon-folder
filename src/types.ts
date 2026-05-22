@@ -58,6 +58,15 @@ export type RibbonFolderEntry =
 	| RibbonFolderWebEntry
 	| RibbonFolderSeparatorEntry;
 
+/** 可直接钉在 Ribbon 上的条目（命令 / 笔记 / 网页，无分隔线） */
+export type RibbonPinEntry = RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry;
+
+/** Ribbon 上的单个快捷按钮（点击直接执行，不弹出分组菜单） */
+export interface RibbonPin {
+	id: string;
+	entry: RibbonPinEntry;
+}
+
 /** @deprecated 使用 RibbonFolderCommandEntry */
 export type RibbonFolderCommand = RibbonFolderCommandEntry;
 
@@ -98,6 +107,8 @@ export interface RibbonFolder {
 
 export interface RibbonFolderSettings {
 	folders: RibbonFolder[];
+	/** Ribbon 快捷项：每个条目对应 Ribbon 上一个独立按钮 */
+	pins?: RibbonPin[];
 	/** 自定义图标根目录，图标字段可填相对此目录的 .svg（如 add.svg）或库内完整路径 */
 	iconFolder?: string;
 	/** 笔记菜单项点击后打开位置，默认新标签页 */
@@ -111,13 +122,17 @@ export interface IRibbonFolderPlugin {
 	saveSettings(): Promise<void>;
 	rebuildRibbons(): Promise<void>;
 	addRibbonForFolder(folder: RibbonFolder, iconFolder?: string): Promise<void>;
+	addRibbonForPin(pin: RibbonPin, iconFolder?: string): Promise<void>;
 	removeRibbonForFolder(folderId: string): void;
+	removeRibbonForPin(pinId: string): void;
 	/** 仅更新已有按钮的标题/图标显示，不删除重建，避免重复按钮 */
 	updateRibbonDisplay(folder: RibbonFolder): void;
+	updatePinRibbonDisplay(pin: RibbonPin): void;
 	getAllCommands(): CommandListItem[];
 }
 
 export const DEFAULT_SETTINGS: RibbonFolderSettings = {
 	folders: [],
+	pins: [],
 	noteOpenLocation: "tab",
 };

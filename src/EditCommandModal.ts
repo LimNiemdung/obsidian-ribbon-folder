@@ -5,6 +5,7 @@ import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { listCommandsWithIcons } from "./utils/commands";
 import { getSvgPathsInFolder } from "./utils/icon";
 import { t } from "./i18n";
+import { entryDisplayLabelKeys } from "./utils/editLabels";
 
 export type EditCommandResult = {
 	id: string;
@@ -17,7 +18,8 @@ export class EditCommandModal extends Modal {
 		app: App,
 		private entry: RibbonFolderCommandEntry,
 		private iconFolder: string,
-		private onConfirm: (result: EditCommandResult) => void
+		private onConfirm: (result: EditCommandResult) => void,
+		private forPin = false
 	) {
 		super(app);
 	}
@@ -46,13 +48,14 @@ export class EditCommandModal extends Modal {
 			})
 		);
 
+		const displayLabels = entryDisplayLabelKeys(this.forPin, "commands");
 		let displayNameInput: HTMLInputElement;
 		new Setting(contentEl)
-			.setName(t("commands.edit.display"))
-			.setDesc(t("commands.edit.displayDescription"))
+			.setName(t(displayLabels.name))
+			.setDesc(t(displayLabels.description))
 			.addText((text) => {
 				displayNameInput = text.inputEl;
-				text.setPlaceholder(t("commands.edit.displayPlaceholder")).setValue(displayName);
+				text.setPlaceholder(t(displayLabels.placeholder)).setValue(displayName);
 			});
 
 		let iconInput: HTMLInputElement;

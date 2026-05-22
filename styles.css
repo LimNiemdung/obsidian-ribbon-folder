@@ -1,5 +1,41 @@
 /* Ribbon Folder 插件样式 */
 
+/* 设置页标签（与 js-bridge 一致） */
+.ribbon-folder-settings-tabs {
+	display: flex;
+	gap: 2px;
+	margin-bottom: 1em;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.ribbon-folder-settings-tab {
+	padding: 6px 12px;
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+}
+
+.ribbon-folder-settings-tab:hover {
+	color: var(--text-normal);
+}
+
+.ribbon-folder-settings-tab.is-active {
+	color: var(--text-accent);
+	font-weight: 600;
+	border-bottom: 2px solid var(--text-accent);
+	margin-bottom: -1px;
+}
+
+.ribbon-folder-settings-panel {
+	display: none;
+}
+
+.ribbon-folder-settings-panel.is-active {
+	display: block;
+}
+
 /* 分组列表容器 */
 .ribbon-folder-folders-wrap {
 	margin-bottom: 1em;

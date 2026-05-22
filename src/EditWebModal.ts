@@ -3,6 +3,7 @@ import type { RibbonFolderWebEntry } from "./types";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { getSvgPathsInFolder } from "./utils/icon";
 import { t } from "./i18n";
+import { entryDisplayLabelKeys } from "./utils/editLabels";
 
 export type EditWebResult = {
 	url: string;
@@ -15,7 +16,8 @@ export class EditWebModal extends Modal {
 		app: App,
 		private entry: RibbonFolderWebEntry,
 		private iconFolder: string,
-		private onConfirm: (result: EditWebResult) => void
+		private onConfirm: (result: EditWebResult) => void,
+		private forPin = false
 	) {
 		super(app);
 	}
@@ -33,13 +35,14 @@ export class EditWebModal extends Modal {
 				text.setPlaceholder(t("web.edit.urlPlaceholder")).setValue(this.entry.url?.trim() ?? "");
 			});
 
+		const displayLabels = entryDisplayLabelKeys(this.forPin, "web");
 		let displayNameInput: HTMLInputElement;
 		new Setting(contentEl)
-			.setName(t("web.edit.display"))
-			.setDesc(t("web.edit.displayDescription"))
+			.setName(t(displayLabels.name))
+			.setDesc(t(displayLabels.description))
 			.addText((text) => {
 				displayNameInput = text.inputEl;
-				text.setPlaceholder(t("web.edit.displayPlaceholder")).setValue(this.entry.displayName?.trim() ?? "");
+				text.setPlaceholder(t(displayLabels.placeholder)).setValue(this.entry.displayName?.trim() ?? "");
 			});
 
 		let iconInput: HTMLInputElement;
