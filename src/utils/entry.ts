@@ -1,4 +1,4 @@
-import type { CommandListItem } from "../types";
+import type { App } from "obsidian";
 import type {
 	RibbonFolderCommandEntry,
 	RibbonFolderNoteEntry,
@@ -11,13 +11,14 @@ import {
 	isRibbonNoteEntry,
 	isRibbonWebEntry,
 } from "../types";
+import { getCommandById } from "./commands";
 
 export type RibbonActionEntry =
 	| RibbonFolderCommandEntry
 	| RibbonFolderNoteEntry
 	| RibbonFolderWebEntry;
 
-export function getEntryLabel(entry: RibbonActionEntry, allCommands: CommandListItem[]): string {
+export function getEntryLabel(entry: RibbonActionEntry, app: App): string {
 	if (isRibbonNoteEntry(entry)) {
 		const base = entry.path.split("/").pop() ?? entry.path;
 		return entry.displayName?.trim() || base;
@@ -25,17 +26,17 @@ export function getEntryLabel(entry: RibbonActionEntry, allCommands: CommandList
 	if (isRibbonWebEntry(entry)) {
 		return entry.displayName?.trim() || entry.url.trim();
 	}
-	const cmd = allCommands.find((c) => c.id === entry.id);
-	return entry.displayName?.trim() || (cmd ? cmd.name : entry.id);
+	const cmd = getCommandById(app, entry.id);
+	return entry.displayName?.trim() || (cmd?.name ?? entry.id);
 }
 
-export function getEntryIconRaw(entry: RibbonActionEntry, allCommands: CommandListItem[]): string {
+export function getEntryIconRaw(entry: RibbonActionEntry, app: App): string {
 	if (isRibbonNoteEntry(entry)) {
 		return entry.icon?.trim() || DEFAULT_NOTE_MENU_ICON;
 	}
 	if (isRibbonWebEntry(entry)) {
 		return entry.icon?.trim() || DEFAULT_WEB_MENU_ICON;
 	}
-	const cmd = allCommands.find((c) => c.id === entry.id);
+	const cmd = getCommandById(app, entry.id);
 	return entry.icon?.trim() || cmd?.icon?.trim() || DEFAULT_COMMAND_MENU_ICON;
 }

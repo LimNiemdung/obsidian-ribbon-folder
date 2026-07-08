@@ -1,7 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type {
 	IRibbonFolderPlugin,
-	CommandListItem,
 	RibbonFolder,
 	MenuDisplayMode,
 	MenuTriggerMode,
@@ -405,9 +404,9 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private entryLabel(entry: RibbonFolderEntry, allCommands: CommandListItem[]): string {
+	private entryLabel(entry: RibbonFolderEntry): string {
 		if (isRibbonSeparatorEntry(entry)) return t("folder.separatorLabel");
-		return getEntryLabel(entry, allCommands);
+		return getEntryLabel(entry, this.plugin.app);
 	}
 
 	private entryKindLabel(entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry): string {
@@ -450,7 +449,6 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	/** Ribbon 快捷项列表（拖拽排序） */
 	private async renderPinRows(listEl: HTMLElement): Promise<void> {
 		listEl.empty();
-		const allCommands = this.plugin.getAllCommands();
 		const iconFolder = this.plugin.settings.iconFolder ?? "";
 		const pins = this.pins;
 		if (pins.length === 0) {
@@ -460,7 +458,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		for (let pinIndex = 0; pinIndex < pins.length; pinIndex++) {
 			const pin = pins[pinIndex];
 			const entry = pin.entry;
-			const displayName = getEntryLabel(entry, allCommands);
+			const displayName = getEntryLabel(entry, this.plugin.app);
 			const row = listEl.createDiv({ cls: "ribbon-folder-cmd-row" });
 			row.setAttr("data-pin-index", String(pinIndex));
 			row.draggable = true;
@@ -468,7 +466,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 
 			const main = row.createDiv({ cls: "ribbon-folder-cmd-row-main" });
 			const iconWrap = main.createSpan({ cls: "ribbon-folder-cmd-row-icon" });
-			const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, allCommands));
+			const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, this.plugin.app));
 			setIcon(iconWrap, iconId);
 			const textWrap = main.createDiv({ cls: "ribbon-folder-cmd-row-text" });
 			textWrap.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
@@ -547,11 +545,10 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		metaEl: HTMLElement
 	): Promise<void> {
 		cmdListEl.empty();
-		const allCommands = this.plugin.getAllCommands();
 		const iconFolder = this.plugin.settings.iconFolder ?? "";
 		for (let cmdIndex = 0; cmdIndex < folder.commands.length; cmdIndex++) {
 			const entry = folder.commands[cmdIndex];
-			const displayName = this.entryLabel(entry, allCommands);
+			const displayName = this.entryLabel(entry);
 			const row = cmdListEl.createDiv({ cls: "ribbon-folder-cmd-row" });
 			row.setAttr("data-command-index", String(cmdIndex));
 			row.draggable = true;
@@ -563,7 +560,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				main.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
 			} else {
 				const iconWrap = main.createSpan({ cls: "ribbon-folder-cmd-row-icon" });
-				const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, allCommands));
+				const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, this.plugin.app));
 				setIcon(iconWrap, iconId);
 				const textWrap = main.createDiv({ cls: "ribbon-folder-cmd-row-text" });
 				textWrap.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });

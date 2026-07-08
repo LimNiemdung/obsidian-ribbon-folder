@@ -160,9 +160,8 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 
 	async addRibbonForPin(pin: RibbonPin, iconFolder?: string) {
 		const base = iconFolder ?? this.settings.iconFolder ?? "";
-		const allCommands = listCommandsWithIcons(this.app);
-		const { title, onClick } = this.resolveEntryAction(pin.entry, allCommands);
-		const rawIcon = getEntryIconRaw(pin.entry, allCommands);
+		const { title, onClick } = this.resolveEntryAction(pin.entry);
+		const rawIcon = getEntryIconRaw(pin.entry, this.app);
 		const iconId = await resolveIconId(this.app, base, rawIcon);
 		const el = this.addRibbonIcon(iconId, title, onClick);
 		if (isRibbonNoteEntry(pin.entry) && Platform.isDesktop) {
@@ -177,7 +176,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	updatePinRibbonDisplay(pin: RibbonPin): void {
 		const el = this.ribbonEls.get(pin.id);
 		if (!el) return;
-		const title = getEntryLabel(pin.entry, listCommandsWithIcons(this.app));
+		const title = getEntryLabel(pin.entry, this.app);
 		el.setAttribute("aria-label", title);
 		el.setAttribute("title", title);
 	}
@@ -270,12 +269,9 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		el.setAttribute("title", name);
 	}
 
-	private resolveEntryAction(
-		entry: RibbonActionEntry,
-		allCommands: CommandListItem[]
-	): { title: string; onClick: () => void } {
+	private resolveEntryAction(entry: RibbonActionEntry): { title: string; onClick: () => void } {
 		const appCommands = (this.app as App & { commands: AppCommands }).commands;
-		const title = getEntryLabel(entry, allCommands);
+		const title = getEntryLabel(entry, this.app);
 		let onClick: () => void;
 		if (isRibbonNoteEntry(entry)) {
 			onClick = () => {
@@ -307,12 +303,11 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		ctx: {
 			displayMode: MenuDisplayMode;
 			iconFolder: string;
-			allCommands: CommandListItem[];
 		}
 	): Promise<void> {
-		const { displayMode, iconFolder, allCommands } = ctx;
-		const { title, onClick } = this.resolveEntryAction(entry, allCommands);
-		const rawIcon = getEntryIconRaw(entry, allCommands);
+		const { displayMode, iconFolder } = ctx;
+		const { title, onClick } = this.resolveEntryAction(entry);
+		const rawIcon = getEntryIconRaw(entry, this.app);
 
 		const iconId =
 			rawIcon && displayMode !== "label-only"
@@ -353,11 +348,10 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		// 桌面端须用 DOM 菜单，原生菜单无法触发 hover-link / 页面预览
 		menu.setUseNativeMenu(false);
 
-		const allCommands = listCommandsWithIcons(this.app);
 		const iconFolder = this.settings.iconFolder ?? "";
 
 		const displayMode = folder.menuDisplay ?? "both";
-		const ctx = { displayMode, iconFolder, allCommands };
+		const ctx = { displayMode, iconFolder };
 		for (const entry of folder.commands) {
 			if (isRibbonSeparatorEntry(entry)) {
 				menu.addSeparator();

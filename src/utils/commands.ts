@@ -32,6 +32,17 @@ function getInternalCommand(app: App, id: string): InternalCommand | undefined {
 	return undefined;
 }
 
+/** 从内部命令表读取单条命令，不调用 `listCommands()`（避免启动时触发各命令的 checkCallback） */
+export function getCommandById(app: App, id: string): CommandListItem | undefined {
+	const internal = getInternalCommand(app, id);
+	if (!internal?.name) return undefined;
+	return {
+		id,
+		name: internal.name,
+		icon: internal.icon,
+	};
+}
+
 /**
  * `listCommands()` 有时不返回 `icon`；从内部 Command 表合并（与 `addCommand({ icon })` 一致）。
  * 若某插件仅用 `addRibbonIcon` 而未在 `addCommand` 中设置 `icon`，则无法从 API 推断 Ribbon 专用图标。
