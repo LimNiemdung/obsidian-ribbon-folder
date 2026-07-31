@@ -42,7 +42,7 @@
             "namePlaceholder": "分组名称",
             "unnamed": "未命名",
             "icon": "图标",
-            "iconDescription": "Lucide 名（如 folder）或库内 .svg 路径；可点击「选择 SVG」从图标文件夹中选",
+            "iconDescription": "Lucide 名（如 folder）或库内 .svg 路径",
             "iconPlaceholder": "folder 或 add.svg 或 scripts/icons/add.svg",
             "selectSvg": "选择 SVG",
             "menuDisplay": "菜单显示",
@@ -84,7 +84,7 @@
                 "displayDescription": "在菜单中显示的名称（留空则使用命令原名）",
                 "displayPlaceholder": "显示名称",
                 "icon": "图标",
-                "iconDescription": "Lucide 名（如 file-text）或库内 .svg 路径；可点击「选择 SVG」",
+                "iconDescription": "Lucide 名（如 file-text）或库内 .svg 路径",
                 "iconPlaceholder": "file-text 或 add.svg 或 scripts/icons/add.svg",
                 "change": "更改命令",
                 "confirm": "确定"
@@ -114,7 +114,7 @@
                 "displayDescription": "在菜单中显示的名称（留空则显示网址）",
                 "displayPlaceholder": "显示名称",
                 "icon": "图标",
-                "iconDescription": "Lucide 名（默认：globe）或库内 .svg 路径；可点击「选择 SVG」",
+                "iconDescription": "Lucide 名（默认：globe）或库内 .svg 路径",
                 "iconPlaceholder": "globe 或 add.svg"
             }
         },
@@ -129,7 +129,7 @@
                 "displayDescription": "在菜单中显示的名称（留空则使用文件名）",
                 "displayPlaceholder": "显示名称",
                 "icon": "图标",
-                "iconDescription": "Lucide 名（默认随扩展名，如 file / file-text）或库内 .svg 路径；可点击「选择 SVG」",
+                "iconDescription": "Lucide 名（默认随扩展名，如 file / file-text）或库内 .svg 路径",
                 "iconPlaceholder": "留空用默认，或 file-text / add.svg"
             }
         },

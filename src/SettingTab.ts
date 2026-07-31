@@ -672,6 +672,14 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		}
 	}
 
+	private async setFolderHeaderIcon(iconEl: HTMLElement, rawIcon: string): Promise<void> {
+		const iconFolder = this.plugin.settings.iconFolder ?? "";
+		const iconId = await resolveIconId(this.plugin.app, iconFolder, rawIcon || "folder");
+		iconEl.empty();
+		setIcon(iconEl, iconId);
+		applyWideIconSize(iconEl, iconId);
+	}
+
 	private async addNewFolder() {
 		const id = "folder-" + Date.now();
 		const folder: RibbonFolder = {
@@ -710,6 +718,8 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 
 		const chevron = header.createSpan({ cls: "ribbon-folder-folder-chevron" });
 		chevron.setText("▸");
+		const headerIconEl = header.createSpan({ cls: "ribbon-folder-folder-header-icon" });
+		void this.setFolderHeaderIcon(headerIconEl, folder.icon || "folder");
 		const titleEl = header.createSpan({ cls: "ribbon-folder-folder-title", text: folder.name || t("folder.unnamed") });
 		const metaEl = header.createSpan({
 			cls: "ribbon-folder-folder-meta",
@@ -786,6 +796,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 							folder.icon = value || "folder";
 							void (async () => {
 								await this.plugin.saveSettings();
+								await this.setFolderHeaderIcon(headerIconEl, folder.icon);
 								this.scheduleRefreshRibbonForFolder(folder);
 							})();
 						});
@@ -800,6 +811,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 								folder.icon = path;
 								void (async () => {
 									await this.plugin.saveSettings();
+									await this.setFolderHeaderIcon(headerIconEl, folder.icon);
 									await this.refreshRibbonForFolder(folder);
 								})();
 							}).open();

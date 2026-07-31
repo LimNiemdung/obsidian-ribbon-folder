@@ -42,7 +42,7 @@
             "namePlaceholder": "Group name",
             "unnamed": "Unnamed",
             "icon": "Icon",
-            "iconDescription": "Lucide name (e.g., folder) or .svg path; click \"Select SVG\" to choose from icon folder",
+            "iconDescription": "Lucide name (e.g., folder) or .svg path",
             "iconPlaceholder": "folder or add.svg or scripts/icons/add.svg",
             "selectSvg": "Select SVG",
             "menuDisplay": "Menu Display",
@@ -84,7 +84,7 @@
                 "displayDescription": "Name displayed in menu (leave blank to use command's original name)",
                 "displayPlaceholder": "Display name",
                 "icon": "Icon",
-                "iconDescription": "Lucide name (e.g., file-text) or .svg path; click \"Select SVG\"",
+                "iconDescription": "Lucide name (e.g., file-text) or .svg path",
                 "iconPlaceholder": "file-text or add.svg or scripts/icons/add.svg",
                 "change": "Change Command",
                 "confirm": "Confirm"
@@ -114,7 +114,7 @@
                 "displayDescription": "Label in the menu (leave blank to use the URL)",
                 "displayPlaceholder": "Display name",
                 "icon": "Icon",
-                "iconDescription": "Lucide name (default: globe) or .svg path; click \"Select SVG\"",
+                "iconDescription": "Lucide name (default: globe) or .svg path",
                 "iconPlaceholder": "globe or add.svg"
             }
         },
@@ -129,7 +129,7 @@
                 "displayDescription": "Label in the menu (leave blank to use the file name)",
                 "displayPlaceholder": "Display name",
                 "icon": "Icon",
-                "iconDescription": "Lucide name (default by extension, e.g. file / file-text) or .svg path; click \"Select SVG\"",
+                "iconDescription": "Lucide name (default by extension, e.g. file / file-text) or .svg path",
                 "iconPlaceholder": "leave blank for default, or file-text / add.svg"
             }
         },

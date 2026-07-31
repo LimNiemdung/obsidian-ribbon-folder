@@ -98,6 +98,23 @@
 	font-size: 0.9em;
 }
 
+.ribbon-folder-folder-header-icon {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.25rem;
+	height: 1.25rem;
+	width: auto;
+	color: var(--text-muted);
+}
+
+.ribbon-folder-folder-header-icon svg.svg-icon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+}
+
 .ribbon-folder-folder-title {
 	font-weight: 600;
 	flex: 0 1 auto;
