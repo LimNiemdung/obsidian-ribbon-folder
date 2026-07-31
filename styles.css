@@ -38,6 +38,7 @@
 
 /* 分组列表容器 */
 .ribbon-folder-folders-wrap {
+	margin-top: 1em;
 	margin-bottom: 1em;
 }
 
@@ -122,6 +123,11 @@
 	color: var(--text-error);
 }
 
+.ribbon-folder-folder-delete svg {
+	width: var(--icon-s);
+	height: var(--icon-s);
+}
+
 .ribbon-folder-folder-delete:hover {
 	color: var(--text-on-accent);
 	background: var(--interactive-accent);
@@ -137,7 +143,7 @@
 	display: none;
 }
 
-.ribbon-folder-folder-body .ribbon-folder-commands-block {
+.ribbon-folder-folder-body .ribbon-folder-entries-block {
 	margin-top: 0.5em;
 	margin-bottom: 0.5em;
 }
@@ -148,16 +154,26 @@
 	margin-bottom: 1em;
 }
 
-.ribbon-folder-commands-block {
-	margin-top: 0.5em;
-	margin-bottom: 0.5em;
+.ribbon-folder-pins-wrap {
+	padding: 0.5em var(--setting-items-padding-x);
 }
 
-.ribbon-folder-cmd-list {
+.ribbon-folder-entries-block {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+	padding: 0.5em var(--setting-items-padding-x);
+}
+
+/* setting-item 自带水平 padding，抵消外层以免双重缩进 */
+.ribbon-folder-entries-block > .ribbon-folder-entry-actions {
+	margin-inline: calc(var(--setting-items-padding-x) * -1);
+}
+
+.ribbon-folder-entry-list {
 	margin: 0.5em 0;
 }
 
-.ribbon-folder-cmd-row {
+.ribbon-folder-entry-row {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -166,7 +182,7 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.ribbon-folder-cmd-row-main {
+.ribbon-folder-entry-row-main {
 	display: flex;
 	align-items: center;
 	gap: 0.5em;
@@ -175,7 +191,7 @@
 }
 
 /* 分隔行 */
-.ribbon-folder-cmd-row-main--separator .ribbon-folder-cmd-row-label {
+.ribbon-folder-entry-row-main--separator .ribbon-folder-entry-row-label {
 	flex: 1;
 	min-width: 0;
 	overflow: hidden;
@@ -183,7 +199,7 @@
 	white-space: nowrap;
 }
 
-.ribbon-folder-cmd-row-icon {
+.ribbon-folder-entry-row-icon {
 	flex-shrink: 0;
 	display: flex;
 	align-items: center;
@@ -193,13 +209,13 @@
 	color: var(--text-muted);
 }
 
-.ribbon-folder-cmd-row-icon svg.svg-icon {
+.ribbon-folder-entry-row-icon svg.svg-icon {
 	width: 1rem;
 	height: 1rem;
 }
 
 /* label 与「命令/笔记」标签 */
-.ribbon-folder-cmd-row-text {
+.ribbon-folder-entry-row-text {
 	flex: 1;
 	min-width: 0;
 	display: flex;
@@ -208,7 +224,7 @@
 	gap: 8px;
 }
 
-.ribbon-folder-cmd-row-text .ribbon-folder-cmd-row-label {
+.ribbon-folder-entry-row-text .ribbon-folder-entry-row-label {
 	flex: 0 1 auto;
 	min-width: 0;
 	overflow: hidden;
@@ -216,7 +232,7 @@
 	white-space: nowrap;
 }
 
-.ribbon-folder-cmd-row-text .ribbon-folder-cmd-row-kind {
+.ribbon-folder-entry-row-text .ribbon-folder-entry-row-kind {
 	flex-shrink: 0;
 	font-size: 10px;
 	font-weight: 500;
@@ -229,23 +245,23 @@
 	border: 1px solid var(--background-modifier-border);
 }
 
-.ribbon-folder-cmd-row-separator .ribbon-folder-cmd-row-label {
+.ribbon-folder-entry-row-separator .ribbon-folder-entry-row-label {
 	opacity: 0.85;
 	font-style: italic;
 	color: var(--text-muted);
 }
 
-.ribbon-folder-cmd-row-btns {
+.ribbon-folder-entry-row-btns {
 	display: flex;
 	gap: 0.35em;
 	flex-shrink: 0;
 }
 
-.ribbon-folder-cmd-row button {
+.ribbon-folder-entry-row button {
 	flex-shrink: 0;
 }
 
-.ribbon-folder-cmd-hint {
+.ribbon-folder-entry-hint {
 	font-size: 0.9em;
 	opacity: 0.8;
 	margin-left: 0.5em;

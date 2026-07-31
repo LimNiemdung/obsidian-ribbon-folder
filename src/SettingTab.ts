@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, setIcon } from "obsidian";
+import { App, Plugin, PluginSettingTab, SettingGroup, setIcon } from "obsidian";
 import type {
 	IRibbonFolderPlugin,
 	RibbonFolder,
@@ -223,8 +223,6 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		new Setting(containerEl).setName(t("settings.title")).setHeading();
-
 		const tabsContainer = containerEl.createDiv({ cls: "ribbon-folder-settings-tabs" });
 		const panels: HTMLElement[] = [];
 		const tabLabels: Record<SettingsTabId, string> = {
@@ -263,106 +261,54 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	}
 
 	private renderGeneralTab(parent: HTMLElement): void {
-		new Setting(parent).setName("").setDesc(t("settings.description"));
-
-		new Setting(parent)
-			.setName(t("settings.iconFolder.name"))
-			.setDesc(t("settings.iconFolder.description"))
-			.addText((text) =>
-				text
-					.setPlaceholder(t("settings.iconFolder.placeholder"))
-					.setValue(this.plugin.settings.iconFolder ?? "")
-					.onChange((value) => {
-						this.plugin.settings.iconFolder = (value ?? "").trim();
-						void (async () => {
-							await this.plugin.saveSettings();
-							this.scheduleRebuildRibbons();
-						})();
-					})
-			);
-
-		new Setting(parent)
-			.setName(t("settings.noteOpenLocation.name"))
-			.setDesc(t("settings.noteOpenLocation.description"))
-			.addDropdown((dropdown) => {
-				(Object.keys(NOTE_OPEN_OPTIONS) as NoteOpenLocation[]).forEach((k) => {
-					void dropdown.addOption(k, NOTE_OPEN_OPTIONS[k]);
+		const group = new SettingGroup(parent);
+		group.addSetting((setting) => {
+			setting
+				.setName(t("settings.iconFolder.name"))
+				.setDesc(t("settings.iconFolder.description"))
+				.addText((text) =>
+					text
+						.setPlaceholder(t("settings.iconFolder.placeholder"))
+						.setValue(this.plugin.settings.iconFolder ?? "")
+						.onChange((value) => {
+							this.plugin.settings.iconFolder = (value ?? "").trim();
+							void (async () => {
+								await this.plugin.saveSettings();
+								this.scheduleRebuildRibbons();
+							})();
+						})
+				);
+		});
+		group.addSetting((setting) => {
+			setting
+				.setName(t("settings.noteOpenLocation.name"))
+				.setDesc(t("settings.noteOpenLocation.description"))
+				.addDropdown((dropdown) => {
+					(Object.keys(NOTE_OPEN_OPTIONS) as NoteOpenLocation[]).forEach((k) => {
+						void dropdown.addOption(k, NOTE_OPEN_OPTIONS[k]);
+					});
+					dropdown.setValue(this.plugin.settings.noteOpenLocation ?? "tab");
+					dropdown.onChange((value) => {
+						this.plugin.settings.noteOpenLocation = value as NoteOpenLocation;
+						void this.plugin.saveSettings();
+					});
 				});
-				dropdown.setValue(this.plugin.settings.noteOpenLocation ?? "tab");
-				dropdown.onChange((value) => {
-					this.plugin.settings.noteOpenLocation = value as NoteOpenLocation;
-					void this.plugin.saveSettings();
-				});
-			});
+		});
 	}
 
 	private renderPinsTab(parent: HTMLElement): void {
-		new Setting(parent).setName(t("settings.pinsList")).setHeading();
-		new Setting(parent).setName("").setDesc(t("settings.pinsListDescription"));
-
-		const pinsWrap = parent.createDiv({ cls: "ribbon-folder-pins-wrap" });
-		const pinListEl = pinsWrap.createDiv({ cls: "ribbon-folder-cmd-list ribbon-folder-draggable-list" });
-		void this.renderPinRows(pinListEl);
-
-		const pinAddRow = pinsWrap.createDiv({ cls: "ribbon-folder-cmd-actions" });
-		new Setting(pinAddRow)
-			.setName("")
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.addCommand")).onClick(() => {
-					new CommandPickerModal(this.app, (chosenId) => {
-						if (this.pins.some((p) => isRibbonCommandEntry(p.entry) && p.entry.id === chosenId)) {
-							return;
-						}
-						const pin: RibbonPin = { id: "pin-" + Date.now(), entry: { id: chosenId } };
-						this.pins.push(pin);
-						void (async () => {
-							await this.plugin.addRibbonForPin(pin);
-							await this.plugin.saveSettings();
-							this.activeSettingsTab = "pins";
-							this.display();
-						})();
-					}).open();
-				})
-			)
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.addNote")).onClick(() => {
-					new NotePickerModal(this.app, (file) => {
-						if (this.pins.some((p) => isRibbonNoteEntry(p.entry) && p.entry.path === file.path)) {
-							return;
-						}
-						const pin: RibbonPin = { id: "pin-" + Date.now(), entry: { kind: "note", path: file.path } };
-						this.pins.push(pin);
-						void (async () => {
-							await this.plugin.addRibbonForPin(pin);
-							await this.plugin.saveSettings();
-							this.activeSettingsTab = "pins";
-							this.display();
-						})();
-					}).open();
-				})
-			)
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.addWeb")).onClick(() => {
-					const draft: RibbonFolderWebEntry = { kind: "web", url: "" };
-					new EditWebModal(
-						this.app,
-						draft,
-						this.plugin.settings.iconFolder ?? "",
-						(result) => {
-							const normalized = normalizeExternalUrl(result.url);
-							if (!normalized) return;
-							if (this.pins.some((p) => isRibbonWebEntry(p.entry) && normalizeExternalUrl(p.entry.url) === normalized)) {
+		const intro = new SettingGroup(parent);
+		intro.addSetting((setting) => {
+			setting
+				.setName(t("settings.pinsList"))
+				.setDesc(t("settings.pinsListDescription"))
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.addCommand")).onClick(() => {
+						new CommandPickerModal(this.app, (chosenId) => {
+							if (this.pins.some((p) => isRibbonCommandEntry(p.entry) && p.entry.id === chosenId)) {
 								return;
 							}
-							const pin: RibbonPin = {
-								id: "pin-" + Date.now(),
-								entry: {
-									kind: "web",
-									url: result.url.trim(),
-									displayName: result.displayName,
-									icon: result.icon,
-								},
-							};
+							const pin: RibbonPin = { id: "pin-" + Date.now(), entry: { id: chosenId } };
 							this.pins.push(pin);
 							void (async () => {
 								await this.plugin.addRibbonForPin(pin);
@@ -370,25 +316,79 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 								this.activeSettingsTab = "pins";
 								this.display();
 							})();
-						},
-						true
-					).open();
-				})
-			);
+						}).open();
+					})
+				)
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.addNote")).onClick(() => {
+						new NotePickerModal(this.app, (file) => {
+							if (this.pins.some((p) => isRibbonNoteEntry(p.entry) && p.entry.path === file.path)) {
+								return;
+							}
+							const pin: RibbonPin = { id: "pin-" + Date.now(), entry: { kind: "note", path: file.path } };
+							this.pins.push(pin);
+							void (async () => {
+								await this.plugin.addRibbonForPin(pin);
+								await this.plugin.saveSettings();
+								this.activeSettingsTab = "pins";
+								this.display();
+							})();
+						}).open();
+					})
+				)
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.addWeb")).onClick(() => {
+						const draft: RibbonFolderWebEntry = { kind: "web", url: "" };
+						new EditWebModal(
+							this.app,
+							draft,
+							this.plugin.settings.iconFolder ?? "",
+							(result) => {
+								const normalized = normalizeExternalUrl(result.url);
+								if (!normalized) return;
+								if (this.pins.some((p) => isRibbonWebEntry(p.entry) && normalizeExternalUrl(p.entry.url) === normalized)) {
+									return;
+								}
+								const pin: RibbonPin = {
+									id: "pin-" + Date.now(),
+									entry: {
+										kind: "web",
+										url: result.url.trim(),
+										displayName: result.displayName,
+										icon: result.icon,
+									},
+								};
+								this.pins.push(pin);
+								void (async () => {
+									await this.plugin.addRibbonForPin(pin);
+									await this.plugin.saveSettings();
+									this.activeSettingsTab = "pins";
+									this.display();
+								})();
+							},
+							true
+						).open();
+					})
+				);
+		});
+
+		const pinsWrap = parent.createDiv({ cls: "ribbon-folder-pins-wrap" });
+		const pinListEl = pinsWrap.createDiv({ cls: "ribbon-folder-entry-list ribbon-folder-draggable-list" });
+		void this.renderPinRows(pinListEl);
 	}
 
 	private renderGroupsTab(parent: HTMLElement, expandedIndices: Set<number>): void {
-		new Setting(parent)
-			.setName(t("settings.addFolder.name"))
-			.setDesc(t("settings.addFolder.description"))
-			.addButton((btn) =>
-				btn.setButtonText(t("settings.addFolder.name")).onClick(() => {
-					void this.addNewFolder();
-				})
-			);
-
-		new Setting(parent).setName(t("settings.groupsList")).setHeading();
-		new Setting(parent).setName("").setDesc(t("settings.groupsListDescription"));
+		const top = new SettingGroup(parent);
+		top.addSetting((setting) => {
+			setting
+				.setName(t("settings.addFolder.name"))
+				.setDesc(t("settings.addFolder.description"))
+				.addButton((btn) =>
+					btn.setButtonText(t("settings.addFolder.name")).onClick(() => {
+						void this.addNewFolder();
+					})
+				);
+		});
 
 		const listWrap = parent.createDiv({ cls: "ribbon-folder-folders-wrap" });
 		for (let i = 0; i < this.plugin.settings.folders.length; i++) {
@@ -452,27 +452,27 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		const iconFolder = this.plugin.settings.iconFolder ?? "";
 		const pins = this.pins;
 		if (pins.length === 0) {
-			listEl.createSpan({ text: t("settings.pinsEmpty"), cls: "ribbon-folder-cmd-hint" });
+			listEl.createSpan({ text: t("settings.pinsEmpty"), cls: "ribbon-folder-entry-hint" });
 			return;
 		}
 		for (let pinIndex = 0; pinIndex < pins.length; pinIndex++) {
 			const pin = pins[pinIndex];
 			const entry = pin.entry;
 			const displayName = getEntryLabel(entry, this.plugin.app);
-			const row = listEl.createDiv({ cls: "ribbon-folder-cmd-row" });
+			const row = listEl.createDiv({ cls: "ribbon-folder-entry-row" });
 			row.setAttr("data-pin-index", String(pinIndex));
 			row.draggable = true;
 			row.addClass("ribbon-folder-draggable-row");
 
-			const main = row.createDiv({ cls: "ribbon-folder-cmd-row-main" });
-			const iconWrap = main.createSpan({ cls: "ribbon-folder-cmd-row-icon" });
+			const main = row.createDiv({ cls: "ribbon-folder-entry-row-main" });
+			const iconWrap = main.createSpan({ cls: "ribbon-folder-entry-row-icon" });
 			const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, this.plugin.app));
 			setIcon(iconWrap, iconId);
-			const textWrap = main.createDiv({ cls: "ribbon-folder-cmd-row-text" });
-			textWrap.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
-			textWrap.createSpan({ cls: "ribbon-folder-cmd-row-kind", text: this.entryKindLabel(entry) });
+			const textWrap = main.createDiv({ cls: "ribbon-folder-entry-row-text" });
+			textWrap.createSpan({ cls: "ribbon-folder-entry-row-label", text: displayName });
+			textWrap.createSpan({ cls: "ribbon-folder-entry-row-kind", text: this.entryKindLabel(entry) });
 
-			const btnWrap = row.createSpan({ cls: "ribbon-folder-cmd-row-btns" });
+			const btnWrap = row.createSpan({ cls: "ribbon-folder-entry-row-btns" });
 			const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
 			editBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
@@ -539,36 +539,36 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	}
 
 	/** 仅渲染某分组的菜单项列表（命令、笔记与网页；拖拽后局部刷新） */
-	private async renderFolderCommandRows(
-		cmdListEl: HTMLElement,
+	private async renderFolderEntryRows(
+		entryListEl: HTMLElement,
 		folder: RibbonFolder,
 		metaEl: HTMLElement
 	): Promise<void> {
-		cmdListEl.empty();
+		entryListEl.empty();
 		const iconFolder = this.plugin.settings.iconFolder ?? "";
 		for (let cmdIndex = 0; cmdIndex < folder.commands.length; cmdIndex++) {
 			const entry = folder.commands[cmdIndex];
 			const displayName = this.entryLabel(entry);
-			const row = cmdListEl.createDiv({ cls: "ribbon-folder-cmd-row" });
+			const row = entryListEl.createDiv({ cls: "ribbon-folder-entry-row" });
 			row.setAttr("data-command-index", String(cmdIndex));
 			row.draggable = true;
 			row.addClass("ribbon-folder-draggable-row");
 
-			const main = row.createDiv({ cls: "ribbon-folder-cmd-row-main" });
+			const main = row.createDiv({ cls: "ribbon-folder-entry-row-main" });
 			if (isRibbonSeparatorEntry(entry)) {
-				main.addClass("ribbon-folder-cmd-row-main--separator");
-				main.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
+				main.addClass("ribbon-folder-entry-row-main--separator");
+				main.createSpan({ cls: "ribbon-folder-entry-row-label", text: displayName });
 			} else {
-				const iconWrap = main.createSpan({ cls: "ribbon-folder-cmd-row-icon" });
+				const iconWrap = main.createSpan({ cls: "ribbon-folder-entry-row-icon" });
 				const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, this.plugin.app));
 				setIcon(iconWrap, iconId);
-				const textWrap = main.createDiv({ cls: "ribbon-folder-cmd-row-text" });
-				textWrap.createSpan({ cls: "ribbon-folder-cmd-row-label", text: displayName });
-				textWrap.createSpan({ cls: "ribbon-folder-cmd-row-kind", text: this.entryKindLabel(entry) });
+				const textWrap = main.createDiv({ cls: "ribbon-folder-entry-row-text" });
+				textWrap.createSpan({ cls: "ribbon-folder-entry-row-label", text: displayName });
+				textWrap.createSpan({ cls: "ribbon-folder-entry-row-kind", text: this.entryKindLabel(entry) });
 			}
 
-			if (isRibbonSeparatorEntry(entry)) row.addClass("ribbon-folder-cmd-row-separator");
-			const btnWrap = row.createSpan({ cls: "ribbon-folder-cmd-row-btns" });
+			if (isRibbonSeparatorEntry(entry)) row.addClass("ribbon-folder-entry-row-separator");
+			const btnWrap = row.createSpan({ cls: "ribbon-folder-entry-row-btns" });
 			if (!isRibbonSeparatorEntry(entry)) {
 				const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
 				editBtn.addEventListener("click", (e) => {
@@ -621,8 +621,8 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				folder.commands.splice(toIndex, 0, item);
 				void (async () => {
 					await this.plugin.saveSettings();
-					cmdListEl.empty();
-					await this.renderFolderCommandRows(cmdListEl, folder, metaEl);
+					entryListEl.empty();
+					await this.renderFolderEntryRows(entryListEl, folder, metaEl);
 				})();
 			});
 		}
@@ -710,10 +710,10 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		};
 
 		const body = block.createDiv({ cls: "ribbon-folder-folder-body" });
+		const folderSettings = new SettingGroup(body);
 
-		new Setting(body)
-			.setName(t("folder.name"))
-			.addText((text) =>
+		folderSettings.addSetting((setting) => {
+			setting.setName(t("folder.name")).addText((text) =>
 				text
 					.setPlaceholder(t("folder.namePlaceholder"))
 					.setValue(folder.name)
@@ -726,135 +726,145 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 						})();
 					})
 			);
+		});
 
 		let folderIconInput: HTMLInputElement;
-		new Setting(body)
-			.setName(t("folder.icon"))
-			.setDesc(t("folder.iconDescription"))
-			.addText((text) => {
-				folderIconInput = text.inputEl;
-				text
-					.setPlaceholder(t("folder.iconPlaceholder"))
-					.setValue(folder.icon)
-					.onChange((value) => {
-						folder.icon = value || "folder";
-						void (async () => {
-							await this.plugin.saveSettings();
-							this.scheduleRefreshRibbonForFolder(folder);
-						})();
-					});
-			})
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.selectSvg")).onClick(() => {
-					void (async () => {
-						const iconFolder = this.plugin.settings.iconFolder ?? "";
-						const items = await getSvgPathsInFolder(this.plugin.app, iconFolder || "");
-						new SvgIconSuggestModal(this.plugin.app, items, (path) => {
-							folderIconInput.value = path;
-							folder.icon = path;
+		folderSettings.addSetting((setting) => {
+			setting
+				.setName(t("folder.icon"))
+				.setDesc(t("folder.iconDescription"))
+				.addText((text) => {
+					folderIconInput = text.inputEl;
+					text
+						.setPlaceholder(t("folder.iconPlaceholder"))
+						.setValue(folder.icon)
+						.onChange((value) => {
+							folder.icon = value || "folder";
 							void (async () => {
 								await this.plugin.saveSettings();
-								await this.refreshRibbonForFolder(folder);
+								this.scheduleRefreshRibbonForFolder(folder);
 							})();
-						}).open();
-					})();
-				})
-			);
-
-		new Setting(body)
-			.setName(t("folder.menuDisplay"))
-			.setDesc(t("folder.menuDisplayDescription"))
-			.addDropdown((dropdown) => {
-				(Object.keys(MENU_DISPLAY_OPTIONS) as MenuDisplayMode[]).forEach((k) => {
-					void dropdown.addOption(k, MENU_DISPLAY_OPTIONS[k]);
-				});
-				dropdown.setValue(folder.menuDisplay ?? "both");
-				dropdown.onChange((value) => {
-					folder.menuDisplay = value as MenuDisplayMode;
-					void this.plugin.saveSettings();
-				});
-			});
-
-		new Setting(body)
-			.setName(t("folder.triggerMode"))
-			.setDesc(t("folder.triggerModeDescription"))
-			.addDropdown((dropdown) => {
-				(Object.keys(TRIGGER_MODE_OPTIONS) as MenuTriggerMode[]).forEach((k) => {
-					void dropdown.addOption(k, TRIGGER_MODE_OPTIONS[k]);
-				});
-				dropdown.setValue(folder.triggerMode ?? "click");
-				dropdown.onChange((value) => {
-					folder.triggerMode = value as MenuTriggerMode;
-					void (async () => {
-						await this.plugin.saveSettings();
-						await this.refreshRibbonForFolder(folder);
-					})();
-				});
-			});
-
-		const cmdBlock = body.createDiv({ cls: "ribbon-folder-commands-block" });
-		cmdBlock.createEl("strong", { text: t("folder.itemsSection") });
-		cmdBlock.createSpan({ text: t("folder.commandsHint"), cls: "ribbon-folder-cmd-hint" });
-
-		const cmdListEl = cmdBlock.createDiv({ cls: "ribbon-folder-cmd-list ribbon-folder-draggable-list" });
-		void this.renderFolderCommandRows(cmdListEl, folder, metaEl);
-
-		const addRow = cmdBlock.createDiv({ cls: "ribbon-folder-cmd-actions" });
-		new Setting(addRow)
-			.setName("")
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.addCommand")).onClick(() => {
-					new CommandPickerModal(this.app, (chosenId) => {
-						if (!folder.commands.some((c) => isRibbonCommandEntry(c) && c.id === chosenId)) {
-							folder.commands.push({ id: chosenId });
-							void this.plugin.saveSettings();
-							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-							this.display();
-						}
-					}).open();
-				})
-			)
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.addNote")).onClick(() => {
-					new NotePickerModal(this.app, (file) => {
-						if (!folder.commands.some((c) => isRibbonNoteEntry(c) && c.path === file.path)) {
-							folder.commands.push({ kind: "note", path: file.path });
-							void this.plugin.saveSettings();
-							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-							this.display();
-						}
-					}).open();
-				})
-			)
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.addWeb")).onClick(() => {
-					const draft: RibbonFolderWebEntry = { kind: "web", url: "" };
-					new EditWebModal(this.app, draft, this.plugin.settings.iconFolder ?? "", (result) => {
-						const normalized = normalizeExternalUrl(result.url);
-						if (!normalized) return;
-						if (folder.commands.some((c) => isRibbonWebEntry(c) && normalizeExternalUrl(c.url) === normalized)) {
-							return;
-						}
-						folder.commands.push({
-							kind: "web",
-							url: result.url.trim(),
-							displayName: result.displayName,
-							icon: result.icon,
 						});
+				})
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.selectSvg")).onClick(() => {
+						void (async () => {
+							const iconFolder = this.plugin.settings.iconFolder ?? "";
+							const items = await getSvgPathsInFolder(this.plugin.app, iconFolder || "");
+							new SvgIconSuggestModal(this.plugin.app, items, (path) => {
+								folderIconInput.value = path;
+								folder.icon = path;
+								void (async () => {
+									await this.plugin.saveSettings();
+									await this.refreshRibbonForFolder(folder);
+								})();
+							}).open();
+						})();
+					})
+				);
+		});
+
+		folderSettings.addSetting((setting) => {
+			setting
+				.setName(t("folder.menuDisplay"))
+				.setDesc(t("folder.menuDisplayDescription"))
+				.addDropdown((dropdown) => {
+					(Object.keys(MENU_DISPLAY_OPTIONS) as MenuDisplayMode[]).forEach((k) => {
+						void dropdown.addOption(k, MENU_DISPLAY_OPTIONS[k]);
+					});
+					dropdown.setValue(folder.menuDisplay ?? "both");
+					dropdown.onChange((value) => {
+						folder.menuDisplay = value as MenuDisplayMode;
+						void this.plugin.saveSettings();
+					});
+				});
+		});
+
+		folderSettings.addSetting((setting) => {
+			setting
+				.setName(t("folder.triggerMode"))
+				.setDesc(t("folder.triggerModeDescription"))
+				.addDropdown((dropdown) => {
+					(Object.keys(TRIGGER_MODE_OPTIONS) as MenuTriggerMode[]).forEach((k) => {
+						void dropdown.addOption(k, TRIGGER_MODE_OPTIONS[k]);
+					});
+					dropdown.setValue(folder.triggerMode ?? "click");
+					dropdown.onChange((value) => {
+						folder.triggerMode = value as MenuTriggerMode;
+						void (async () => {
+							await this.plugin.saveSettings();
+							await this.refreshRibbonForFolder(folder);
+						})();
+					});
+				});
+		});
+
+		const entriesBlock = body.createDiv({ cls: "ribbon-folder-entries-block" });
+		entriesBlock.createEl("strong", { text: t("folder.itemsSection") });
+		entriesBlock.createSpan({ text: t("folder.commandsHint"), cls: "ribbon-folder-entry-hint" });
+
+		const entryListEl = entriesBlock.createDiv({ cls: "ribbon-folder-entry-list ribbon-folder-draggable-list" });
+		void this.renderFolderEntryRows(entryListEl, folder, metaEl);
+
+		const addRow = entriesBlock.createDiv({ cls: "ribbon-folder-entry-actions" });
+		const addActions = new SettingGroup(addRow);
+		addActions.addSetting((setting) => {
+			setting
+				.setName("")
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.addCommand")).onClick(() => {
+						new CommandPickerModal(this.app, (chosenId) => {
+							if (!folder.commands.some((c) => isRibbonCommandEntry(c) && c.id === chosenId)) {
+								folder.commands.push({ id: chosenId });
+								void this.plugin.saveSettings();
+								metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+								this.display();
+							}
+						}).open();
+					})
+				)
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.addNote")).onClick(() => {
+						new NotePickerModal(this.app, (file) => {
+							if (!folder.commands.some((c) => isRibbonNoteEntry(c) && c.path === file.path)) {
+								folder.commands.push({ kind: "note", path: file.path });
+								void this.plugin.saveSettings();
+								metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+								this.display();
+							}
+						}).open();
+					})
+				)
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.addWeb")).onClick(() => {
+						const draft: RibbonFolderWebEntry = { kind: "web", url: "" };
+						new EditWebModal(this.app, draft, this.plugin.settings.iconFolder ?? "", (result) => {
+							const normalized = normalizeExternalUrl(result.url);
+							if (!normalized) return;
+							if (folder.commands.some((c) => isRibbonWebEntry(c) && normalizeExternalUrl(c.url) === normalized)) {
+								return;
+							}
+							folder.commands.push({
+								kind: "web",
+								url: result.url.trim(),
+								displayName: result.displayName,
+								icon: result.icon,
+							});
+							void this.plugin.saveSettings();
+							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+							this.display();
+						}).open();
+					})
+				)
+				.addButton((btn) =>
+					btn.setButtonText(t("folder.addSeparator")).onClick(() => {
+						folder.commands.push({ kind: "separator" });
 						void this.plugin.saveSettings();
 						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
 						this.display();
-					}).open();
-				})
-			)
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.addSeparator")).onClick(() => {
-					folder.commands.push({ kind: "separator" });
-					void this.plugin.saveSettings();
-					metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-					this.display();
-				})
-			);
+					})
+				);
+		});
 
 		block.ondragover = (e) => {
 			e.preventDefault();

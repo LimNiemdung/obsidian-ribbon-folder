@@ -8,7 +8,7 @@
                 "pins": "Shortcuts",
                 "groups": "Groups"
             },
-            "pinsList": "Ribbon shortcuts",
+            "pinsList": "New shortcut",
             "pinsListDescription": "Each shortcut appears as its own Ribbon button.",
             "pinsEmpty": "(No shortcuts yet—use the buttons below to add one)",
             "iconFolder": {

@@ -8,7 +8,7 @@
                 "pins": "快捷项",
                 "groups": "分组项"
             },
-            "pinsList": "Ribbon 快捷项",
+            "pinsList": "新建快捷项",
             "pinsListDescription": "每个快捷项在 Ribbon 上占一个独立按钮。",
             "pinsEmpty": "（暂无快捷项，可用下方按钮添加）",
             "iconFolder": {
