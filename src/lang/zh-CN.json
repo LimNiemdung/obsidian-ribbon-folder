@@ -34,6 +34,7 @@
         },
         "folder": {
             "delete": "删除分组",
+            "deleteConfirmTitle": "删除分组",
             "deleteConfirm": "确定要删除分组「{{name}}」吗？",
             "deleteConfirmCancel": "取消",
             "deleteConfirmDelete": "删除",
@@ -95,7 +96,12 @@
             "editBtn": "编辑",
             "removeBtn": "移除",
             "hideBtn": "隐藏",
-            "showBtn": "启用"
+            "showBtn": "启用",
+            "removeConfirmTitle": "移除菜单项",
+            "removeConfirm": "确定要移除「{{name}}」吗？",
+            "removeConfirmBtn": "移除",
+            "removePinConfirmTitle": "移除快捷项",
+            "removePinConfirm": "确定要从 Ribbon 移除「{{name}}」吗？"
         },
         "web": {
             "openBlocked": "无法打开该链接（地址无效或不安全）。",

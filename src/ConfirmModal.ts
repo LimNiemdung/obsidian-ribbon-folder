@@ -1,32 +1,28 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, ConfirmationModal } from "obsidian";
 import { t } from "./i18n";
 
-export class ConfirmModal extends Modal {
-	constructor(
-		app: App,
-		private message: string,
-		private onConfirm: () => void,
-		private confirmText = t("folder.deleteConfirmDelete"),
-		private cancelText = t("folder.deleteConfirmCancel")
-	) {
-		super(app);
+/** 使用官方 ConfirmationModal（Obsidian ≥ 1.13）打开删除确认 */
+export function openDeleteConfirm(
+	app: App,
+	options: {
+		title: string;
+		message: string;
+		onConfirm: () => void | Promise<void>;
+		confirmText?: string;
+		cancelText?: string;
 	}
-
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.createEl("p", { text: this.message, cls: "setting-item-description" });
-
-		new Setting(contentEl)
-			.addButton((btn) =>
-				btn.setButtonText(this.cancelText).onClick(() => {
-					this.close();
-				})
-			)
-			.addButton((btn) =>
-				btn.setButtonText(this.confirmText).setWarning().onClick(() => {
-					this.onConfirm();
-					this.close();
-				})
-			);
-	}
+): void {
+	const modal = new ConfirmationModal(app);
+	modal.setTitle(options.title);
+	modal.contentEl.createEl("p", { text: options.message });
+	modal
+		.addButton((btn) =>
+			btn
+				.setButtonText(options.confirmText ?? t("folder.deleteConfirmDelete"))
+				.setDestructive()
+				.setCta()
+				.onClick(() => options.onConfirm())
+		)
+		.addCancelButton(options.cancelText ?? t("folder.deleteConfirmCancel"))
+		.open();
 }

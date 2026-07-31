@@ -19,7 +19,7 @@ import {
 } from "./types";
 import { getEntryIconRaw, getEntryLabel, getPathExtension } from "./utils/entry";
 import { CommandPickerModal } from "./CommandPickerModal";
-import { ConfirmModal } from "./ConfirmModal";
+import { openDeleteConfirm } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
 import { EditNoteModal } from "./EditNoteModal";
 import { EditWebModal } from "./EditWebModal";
@@ -510,12 +510,19 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				);
 			});
 			createEntryIconButton(btnWrap, "trash-2", t("commands.removeBtn"), () => {
-				void (async () => {
-					this.plugin.settings.pins = this.pins.filter((_, i) => i !== pinIndex);
-					this.plugin.removeRibbonForPin(pin.id);
-					await this.plugin.saveSettings();
-					this.display();
-				})();
+				openDeleteConfirm(this.app, {
+					title: t("commands.removePinConfirmTitle"),
+					message: t("commands.removePinConfirm", { name: displayName }),
+					confirmText: t("commands.removeConfirmBtn"),
+					onConfirm: () => {
+						void (async () => {
+							this.plugin.settings.pins = this.pins.filter((_, i) => i !== pinIndex);
+							this.plugin.removeRibbonForPin(pin.id);
+							await this.plugin.saveSettings();
+							this.display();
+						})();
+					},
+				});
 			}, "ribbon-folder-entry-icon-btn--danger");
 
 			row.addEventListener("dragstart", (e: DragEvent) => {
@@ -613,12 +620,19 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				"ribbon-folder-entry-icon-btn--visibility"
 			);
 			createEntryIconButton(btnWrap, "trash-2", t("commands.removeBtn"), () => {
-				void (async () => {
-					folder.commands = folder.commands.filter((_, i) => i !== cmdIndex);
-					await this.plugin.saveSettings();
-					metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
-					this.display();
-				})();
+				openDeleteConfirm(this.app, {
+					title: t("commands.removeConfirmTitle"),
+					message: t("commands.removeConfirm", { name: displayName }),
+					confirmText: t("commands.removeConfirmBtn"),
+					onConfirm: () => {
+						void (async () => {
+							folder.commands = folder.commands.filter((_, i) => i !== cmdIndex);
+							await this.plugin.saveSettings();
+							metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
+							this.display();
+						})();
+					},
+				});
 			}, "ribbon-folder-entry-icon-btn--danger");
 
 			row.addEventListener("dragstart", (e: DragEvent) => {
@@ -708,18 +722,18 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		deleteBtn.onclick = (e) => {
 			e.preventDefault();
 			e.stopPropagation();
-			new ConfirmModal(
-				this.app,
-				t("folder.deleteConfirm", { name: folder.name || t("folder.unnamed") }),
-				() => {
+			openDeleteConfirm(this.app, {
+				title: t("folder.deleteConfirmTitle"),
+				message: t("folder.deleteConfirm", { name: folder.name || t("folder.unnamed") }),
+				onConfirm: () => {
 					this.plugin.settings.folders = this.plugin.settings.folders.filter((f) => f.id !== folder.id);
 					this.plugin.removeRibbonForFolder(folder.id);
 					void (async () => {
 						await this.plugin.saveSettings();
 						this.display();
 					})();
-				}
-			).open();
+				},
+			});
 		};
 
 		header.onclick = (e) => {

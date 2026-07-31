@@ -34,6 +34,7 @@
         },
         "folder": {
             "delete": "Delete Group",
+            "deleteConfirmTitle": "Delete group",
             "deleteConfirm": "Are you sure you want to delete the group \"{{name}}\"?",
             "deleteConfirmCancel": "Cancel",
             "deleteConfirmDelete": "Delete",
@@ -95,7 +96,12 @@
             "editBtn": "Edit",
             "removeBtn": "Remove",
             "hideBtn": "Hide",
-            "showBtn": "Enable"
+            "showBtn": "Enable",
+            "removeConfirmTitle": "Remove menu item",
+            "removeConfirm": "Remove \"{{name}}\"?",
+            "removeConfirmBtn": "Remove",
+            "removePinConfirmTitle": "Remove shortcut",
+            "removePinConfirm": "Remove \"{{name}}\" from the Ribbon?"
         },
         "web": {
             "openBlocked": "Cannot open this link (invalid or unsafe URL).",
