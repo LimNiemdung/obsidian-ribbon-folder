@@ -15,7 +15,7 @@ export type MenuDisplayMode = "icon-only" | "label-only" | "both";
 /** 菜单触发方式：点击图标或悬停图标 */
 export type MenuTriggerMode = "click" | "hover";
 
-/** 点击菜单中的笔记时在何处打开 */
+/** 点击菜单中的库内文件时在何处打开 */
 export type NoteOpenLocation = "tab" | "current" | "split";
 
 /** 分组内一条命令（菜单项） */
@@ -29,10 +29,10 @@ export interface RibbonFolderCommandEntry {
 	hidden?: boolean;
 }
 
-/** 分组内一条笔记（点击在编辑器中打开） */
+/** 分组内一条库内文件（点击打开；kind 仍为 note 以兼容旧数据） */
 export interface RibbonFolderNoteEntry {
 	kind: "note";
-	/** 库内路径 */
+	/** 库内路径（任意文件，不限于 Markdown） */
 	path: string;
 	displayName?: string;
 	/** 菜单项图标；未填时默认 file */
@@ -66,7 +66,7 @@ export type RibbonFolderEntry =
 	| RibbonFolderWebEntry
 	| RibbonFolderSeparatorEntry;
 
-/** 可直接钉在 Ribbon 上的条目（命令 / 笔记 / 网页，无分隔线） */
+/** 可直接钉在 Ribbon 上的条目（命令 / 文件 / 网页，无分隔线） */
 export type RibbonPinEntry = RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry;
 
 /** Ribbon 上的单个快捷按钮（点击直接执行，不弹出分组菜单） */
@@ -100,7 +100,7 @@ export function isEntryHidden(e: RibbonFolderEntry): boolean {
 
 /** 命令菜单项默认 Lucide 图标 */
 export const DEFAULT_COMMAND_MENU_ICON = "command";
-/** 笔记菜单项默认 Lucide 图标 */
+/** 文件菜单项通用默认 Lucide 图标（未知扩展名时回退） */
 export const DEFAULT_NOTE_MENU_ICON = "file";
 /** 网页菜单项默认 Lucide 图标 */
 export const DEFAULT_WEB_MENU_ICON = "globe";
@@ -109,7 +109,7 @@ export interface RibbonFolder {
 	id: string;
 	name: string;
 	icon: string;
-	/** 命令、笔记与网页条目（历史数据仅有 id 无 kind 时视为命令） */
+	/** 命令、文件与网页条目（历史数据仅有 id 无 kind 时视为命令） */
 	commands: RibbonFolderEntry[];
 	/** 菜单中命令的显示方式：仅图标 / 仅标签 / 都显示 */
 	menuDisplay?: MenuDisplayMode;
@@ -123,7 +123,7 @@ export interface RibbonFolderSettings {
 	pins?: RibbonPin[];
 	/** 自定义图标根目录，图标字段可填相对此目录的 .svg（如 add.svg）或库内完整路径 */
 	iconFolder?: string;
-	/** 笔记菜单项点击后打开位置，默认新标签页 */
+	/** 文件菜单项点击后打开位置，默认新标签页 */
 	noteOpenLocation?: NoteOpenLocation;
 }
 

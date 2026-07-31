@@ -2,7 +2,7 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder 设置",
-            "description": "可将命令、笔记或网页直接钉在 Ribbon 上，也可收纳到分组按钮的弹出菜单中。",
+            "description": "可将命令、文件或网页直接钉在 Ribbon 上，也可收纳到分组按钮的弹出菜单中。",
             "tabs": {
                 "general": "通用",
                 "pins": "快捷项",
@@ -23,8 +23,8 @@
             "groupsList": "分组列表",
             "groupsListDescription": "点击分组行展开/收起；拖拽左侧把手可调整分组顺序。",
             "noteOpenLocation": {
-                "name": "打开笔记的位置",
-                "description": "从 Ribbon 快捷项或分组菜单打开笔记时，在何处打开。",
+                "name": "打开文件的位置",
+                "description": "从 Ribbon 快捷项或分组菜单打开文件时，在何处打开。",
                 "options": {
                     "tab": "新标签页",
                     "current": "当前标签页",
@@ -57,18 +57,18 @@
                 "click": "点击显示",
                 "hover": "悬停显示"
             },
-            "itemsSection": "命令、笔记与网页",
+            "itemsSection": "命令、文件与网页",
             "commandsHint": "（拖拽可调整顺序）",
             "noItems": "（暂无菜单项）",
             "itemsCount": "{{count}} 项",
             "addCommand": "添加命令",
-            "addNote": "添加笔记",
+            "addNote": "添加文件",
             "addWeb": "添加网页",
             "addSeparator": "添加分隔行",
             "separatorLabel": "— 分隔线 —",
             "itemKind": {
                 "command": "命令",
-                "note": "笔记",
+                "file": "文件",
                 "web": "网页"
             }
         },
@@ -114,17 +114,17 @@
         },
         "notes": {
             "edit": {
-                "title": "编辑笔记",
-                "path": "笔记路径",
-                "pathDescription": "库内 Markdown 笔记路径（如 文件夹/笔记.md）。",
-                "pathPlaceholder": "路径/笔记.md",
+                "title": "编辑文件",
+                "path": "文件路径",
+                "pathDescription": "库内文件路径（如 文件夹/文档.pdf）。",
+                "pathPlaceholder": "路径/文件.ext",
                 "browse": "浏览",
                 "display": "菜单显示名",
                 "displayDescription": "在菜单中显示的名称（留空则使用文件名）",
                 "displayPlaceholder": "显示名称",
                 "icon": "图标",
-                "iconDescription": "Lucide 名（默认：file）或库内 .svg 路径；可点击「选择 SVG」",
-                "iconPlaceholder": "file 或 add.svg"
+                "iconDescription": "Lucide 名（默认随扩展名，如 file / file-text）或库内 .svg 路径；可点击「选择 SVG」",
+                "iconPlaceholder": "留空用默认，或 file-text / add.svg"
             }
         },
         "pinEdit": {
@@ -139,7 +139,7 @@
             "noGroupsYet": "请先在 Ribbon Folder 设置中创建分组。"
         },
         "modal": {
-            "notePickerPlaceholder": "搜索笔记…",
+            "notePickerPlaceholder": "搜索文件…",
             "searchPlaceholder": "搜索命令...",
             "svgIcon": {
                 "searchPlaceholder": "搜索 SVG 图标…",

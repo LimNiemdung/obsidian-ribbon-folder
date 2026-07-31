@@ -26,7 +26,7 @@ import {
 	isRibbonWebEntry,
 } from "./types";
 import { isUrlSafeToOpen, normalizeExternalUrl } from "./utils/url";
-import { getEntryIconRaw, getEntryLabel, type RibbonActionEntry } from "./utils/entry";
+import { getEntryIconRaw, getEntryLabel, getPathExtension, type RibbonActionEntry } from "./utils/entry";
 import { listCommandsWithIcons } from "./utils/commands";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, applyWideIconSize } from "./utils/icon";
@@ -164,7 +164,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		const rawIcon = getEntryIconRaw(pin.entry, this.app);
 		const iconId = await resolveIconId(this.app, base, rawIcon);
 		const el = this.addRibbonIcon(iconId, title, onClick);
-		if (isRibbonNoteEntry(pin.entry) && Platform.isDesktop) {
+		if (isRibbonNoteEntry(pin.entry) && Platform.isDesktop && getPathExtension(pin.entry.path) === "md") {
 			const notePath = pin.entry.path;
 			el.addEventListener("mouseenter", (e: MouseEvent) => {
 				this.triggerNotePagePreview(el, notePath, e);
@@ -227,7 +227,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		return { clientX: x, clientY: y } as MouseEvent;
 	}
 
-	/** 按设置将笔记在指定 leaf 中打开 */
+	/** 按设置将库内文件在指定 leaf 中打开 */
 	openNoteFile(file: TFile): void {
 		const mode: NoteOpenLocation = this.settings.noteOpenLocation ?? "tab";
 		let leaf;
@@ -339,8 +339,8 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			else if (!iconId) item.setTitle(title);
 			else item.setTitle("");
 			item.onClick(onClick);
-			// 页面预览依赖鼠标悬停；触摸设备无 hover-link 体验，跳过绑定
-			if (isRibbonNoteEntry(entry) && Platform.isDesktop) {
+			// 页面预览仅对 Markdown 有意义；触摸设备无 hover-link 体验，跳过绑定
+			if (isRibbonNoteEntry(entry) && Platform.isDesktop && getPathExtension(entry.path) === "md") {
 				queueMicrotask(() => this.bindNoteItemHover(item, entry.path));
 			}
 		});

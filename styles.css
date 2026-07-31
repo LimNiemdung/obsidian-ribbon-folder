@@ -216,7 +216,7 @@
 	flex-shrink: 0;
 }
 
-/* label 与「命令/笔记」标签 */
+/* label 与「命令 / 扩展名」标签 */
 .ribbon-folder-entry-row-text {
 	flex: 1;
 	min-width: 0;

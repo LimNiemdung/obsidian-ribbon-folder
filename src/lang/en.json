@@ -2,7 +2,7 @@
     "translation": {
         "settings": {
             "title": "Ribbon Folder Settings",
-            "description": "Pin commands, notes, or web links directly on the Ribbon, or group them behind folder buttons with pop-up menus.",
+            "description": "Pin commands, files, or web links directly on the Ribbon, or group them behind folder buttons with pop-up menus.",
             "tabs": {
                 "general": "General",
                 "pins": "Shortcuts",
@@ -23,8 +23,8 @@
             "groupsList": "Groups List",
             "groupsListDescription": "Click group rows to expand/collapse; drag handles to reorder groups.",
             "noteOpenLocation": {
-                "name": "Open notes in",
-                "description": "Where to open a note when you click it from a Ribbon shortcut or group menu.",
+                "name": "Open files in",
+                "description": "Where to open a file when you click it from a Ribbon shortcut or group menu.",
                 "options": {
                     "tab": "New tab",
                     "current": "Existing tab",
@@ -57,18 +57,18 @@
                 "click": "Click to Show",
                 "hover": "Hover to Show"
             },
-            "itemsSection": "Commands, notes & web",
+            "itemsSection": "Commands, files & web",
             "commandsHint": "(drag to reorder)",
             "noItems": "(No menu items)",
             "itemsCount": "{{count}} items",
             "addCommand": "Add command",
-            "addNote": "Add note",
+            "addNote": "Add file",
             "addWeb": "Add web link",
             "addSeparator": "Add separator",
             "separatorLabel": "— Separator —",
             "itemKind": {
                 "command": "Command",
-                "note": "Note",
+                "file": "File",
                 "web": "Web"
             }
         },
@@ -114,17 +114,17 @@
         },
         "notes": {
             "edit": {
-                "title": "Edit note",
-                "path": "Note path",
-                "pathDescription": "Vault path to the Markdown note (e.g. Folder/Note.md).",
-                "pathPlaceholder": "path/to/note.md",
+                "title": "Edit file",
+                "path": "File path",
+                "pathDescription": "Vault path to the file (e.g. Folder/Document.pdf).",
+                "pathPlaceholder": "path/to/file.ext",
                 "browse": "Browse",
                 "display": "Menu label",
                 "displayDescription": "Label in the menu (leave blank to use the file name)",
                 "displayPlaceholder": "Display name",
                 "icon": "Icon",
-                "iconDescription": "Lucide name (default: file) or .svg path; click \"Select SVG\"",
-                "iconPlaceholder": "file or add.svg"
+                "iconDescription": "Lucide name (default by extension, e.g. file / file-text) or .svg path; click \"Select SVG\"",
+                "iconPlaceholder": "leave blank for default, or file-text / add.svg"
             }
         },
         "pinEdit": {
@@ -139,7 +139,7 @@
             "noGroupsYet": "Create a group in Ribbon Folder settings first."
         },
         "modal": {
-            "notePickerPlaceholder": "Search notes...",
+            "notePickerPlaceholder": "Search files...",
             "searchPlaceholder": "Search commands...",
             "svgIcon": {
                 "searchPlaceholder": "Search SVG icons...",

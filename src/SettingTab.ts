@@ -17,7 +17,7 @@ import {
 	isRibbonSeparatorEntry,
 	isRibbonWebEntry,
 } from "./types";
-import { getEntryIconRaw, getEntryLabel } from "./utils/entry";
+import { getEntryIconRaw, getEntryLabel, getPathExtension } from "./utils/entry";
 import { CommandPickerModal } from "./CommandPickerModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { EditCommandModal } from "./EditCommandModal";
@@ -430,7 +430,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	}
 
 	private entryKindLabel(entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry): string {
-		if (isRibbonNoteEntry(entry)) return t("folder.itemKind.note");
+		if (isRibbonNoteEntry(entry)) return getPathExtension(entry.path) || t("folder.itemKind.file");
 		if (isRibbonWebEntry(entry)) return t("folder.itemKind.web");
 		return t("folder.itemKind.command");
 	}
@@ -555,7 +555,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		}
 	}
 
-	/** 仅渲染某分组的菜单项列表（命令、笔记与网页；拖拽后局部刷新） */
+	/** 仅渲染某分组的菜单项列表（命令、文件与网页；拖拽后局部刷新） */
 	private async renderFolderEntryRows(
 		entryListEl: HTMLElement,
 		folder: RibbonFolder,
