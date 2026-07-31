@@ -3,14 +3,6 @@
         "settings": {
             "title": "Ribbon Folder 设置",
             "description": "可将命令、文件或网页直接钉在 Ribbon 上，也可收纳到分组按钮的弹出菜单中。",
-            "tabs": {
-                "general": "通用",
-                "pins": "快捷项",
-                "groups": "分组项"
-            },
-            "pinsList": "新建快捷项",
-            "pinsListDescription": "每个快捷项在 Ribbon 上占一个独立按钮。",
-            "pinsEmpty": "（暂无快捷项，可用下方按钮添加）",
             "iconFolder": {
                 "name": "图标文件夹",
                 "description": "自定义图标根目录。图标可填 Lucide 名（如 dice）或相对此目录的 .svg（如 add.svg）或库内完整路径。",
@@ -20,8 +12,6 @@
                 "name": "新建分组",
                 "description": "在 Ribbon 上添加一个新按钮组"
             },
-            "groupsList": "分组列表",
-            "groupsListDescription": "点击分组行展开/收起；拖拽左侧把手可调整分组顺序。",
             "noteOpenLocation": {
                 "name": "打开文件的位置",
                 "description": "从 Ribbon 快捷项或分组菜单打开文件时，在何处打开。",
@@ -30,10 +20,26 @@
                     "current": "当前标签页",
                     "split": "分屏"
                 }
+            },
+            "pinsPage": {
+                "name": "快捷项",
+                "description": "设置哪些命令、文件或网页直接显示在功能区上。",
+                "empty": "暂无快捷项",
+                "add": "添加快捷项"
+            },
+            "groupsPage": {
+                "name": "分组",
+                "description": "将多个命令收纳到功能区分组按钮的弹出菜单中。",
+                "empty": "暂无分组",
+                "add": "新建分组"
+            },
+            "folderItems": {
+                "add": "添加菜单项"
             }
         },
         "folder": {
             "delete": "删除分组",
+            "deleteDescription": "从功能区移除此分组及其菜单项。",
             "deleteConfirmTitle": "删除分组",
             "deleteConfirm": "确定要删除分组「{{name}}」吗？",
             "deleteConfirmCancel": "取消",
@@ -58,9 +64,9 @@
                 "click": "点击显示",
                 "hover": "悬停显示"
             },
-            "itemsSection": "命令、文件与网页",
+            "itemsSection": "菜单项",
             "commandsHint": "（拖拽可调整顺序）",
-            "noItems": "（暂无菜单项）",
+            "noItems": "暂无菜单项",
             "itemsCount": "{{count}} 项",
             "addCommand": "添加命令",
             "addNote": "添加文件",

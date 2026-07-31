@@ -1,237 +1,16 @@
 /* Ribbon Folder 插件样式 */
 
-/* 设置页标签（与 js-bridge 一致） */
-.ribbon-folder-settings-tabs {
-	display: flex;
-	gap: 2px;
-	margin-bottom: 1em;
-	border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.ribbon-folder-settings-tab {
-	padding: 6px 12px;
-	border: none;
-	background: transparent;
-	color: var(--text-muted);
-	cursor: pointer;
-	font-size: var(--font-ui-small);
-}
-
-.ribbon-folder-settings-tab:hover {
-	color: var(--text-normal);
-}
-
-.ribbon-folder-settings-tab.is-active {
-	color: var(--text-accent);
-	font-weight: 600;
-	border-bottom: 2px solid var(--text-accent);
-	margin-bottom: -1px;
-}
-
-.ribbon-folder-settings-panel {
-	display: none;
-}
-
-.ribbon-folder-settings-panel.is-active {
-	display: block;
-}
-
-/* 分组列表容器 */
-.ribbon-folder-folders-wrap {
-	margin-top: 1em;
-	margin-bottom: 1em;
-}
-
-/* 单个分组：可折叠卡片，支持拖拽排序 */
-.ribbon-folder-folder-block {
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	margin-bottom: 0.75em;
-	overflow: hidden;
-}
-
-.ribbon-folder-folder-block.is-expanded {
-	border-color: var(--interactive-accent);
-}
-
-.ribbon-folder-folder-block.is-drag-over {
-	border-color: var(--interactive-accent);
-	box-shadow: 0 0 0 2px var(--interactive-accent);
-}
-
-/* 分组标题行：点击展开/收起 */
-.ribbon-folder-folder-header {
-	display: flex;
-	align-items: center;
-	gap: var(--size-4-2);
-	padding: var(--size-4-2) var(--size-4-3);
-	cursor: default;
-	background: var(--background-secondary);
-	user-select: none;
-}
-
-.ribbon-folder-folder-header:hover {
-	background: var(--background-secondary-alt);
-}
-
-.ribbon-folder-folder-drag-handle {
-	flex-shrink: 0;
-	display: flex;
-	align-items: center;
-	cursor: grab;
-	color: var(--text-muted);
-	padding: 2px;
-}
-
-.ribbon-folder-folder-drag-handle:hover {
-	color: var(--text-normal);
-}
-
-.ribbon-folder-folder-drag-handle:active {
-	cursor: grabbing;
-}
-
-.ribbon-folder-folder-chevron {
-	flex-shrink: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: var(--icon-xs);
-	height: var(--icon-xs);
-	color: var(--text-muted);
-}
-
-.ribbon-folder-folder-chevron svg.svg-icon {
-	width: var(--icon-xs);
-	height: var(--icon-xs);
-}
-
-.ribbon-folder-folder-header-icon {
-	flex-shrink: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 1.25rem;
-	height: 1.25rem;
-	width: auto;
-	color: var(--text-muted);
-}
-
-.ribbon-folder-folder-header-icon svg.svg-icon {
-	width: 1rem;
-	height: 1rem;
-	flex-shrink: 0;
-}
-
-.ribbon-folder-folder-title {
-	font-weight: 600;
-	flex: 0 1 auto;
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.ribbon-folder-folder-meta {
-	flex: 1 1 auto;
-	min-width: 0;
-	font-size: 0.85em;
-	color: var(--text-muted);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.ribbon-folder-folder-delete {
-	flex-shrink: 0;
-	margin-left: auto;
-	color: var(--text-muted);
-}
-
-.ribbon-folder-folder-delete svg {
-	width: var(--icon-s);
-	height: var(--icon-s);
-}
-
-.ribbon-folder-folder-delete:hover {
-	color: var(--text-error);
-	background-color: var(--background-modifier-hover);
-}
-
-/* 分组正文：折叠时隐藏 */
-.ribbon-folder-folder-body {
-	padding: 12px;
-	border-top: 1px solid var(--background-modifier-border);
-}
-
-.ribbon-folder-folder-block:not(.is-expanded) .ribbon-folder-folder-body {
-	display: none;
-}
-
-.ribbon-folder-folder-body .ribbon-folder-entries-block {
-	margin-top: 0.5em;
-	margin-bottom: 0.5em;
-}
-
-.ribbon-folder-setting-block {
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-m);
-	margin-bottom: var(--size-4-3);
-}
-
-.ribbon-folder-pins-wrap {
-	padding: 0.5em var(--setting-items-padding-x);
-}
-
-.ribbon-folder-entries-block {
-	margin-top: 0.5em;
-	margin-bottom: 0.5em;
-	padding: 0.5em var(--setting-items-padding-x);
-}
-
-/* setting-item 自带水平 padding，抵消外层以免双重缩进 */
-.ribbon-folder-entries-block > .ribbon-folder-entry-actions {
-	margin-inline: calc(var(--setting-items-padding-x) * -1);
-}
-
-.ribbon-folder-entry-list {
-	margin: 0.5em 0;
-}
-
-.ribbon-folder-entry-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.5em;
-	padding: 0.25em 0;
-	border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.ribbon-folder-entry-row-main {
-	display: flex;
-	align-items: center;
-	gap: 0.5em;
-	flex: 1;
-	min-width: 0;
-}
-
-/* 分隔行 */
-.ribbon-folder-entry-row-main--separator .ribbon-folder-entry-row-label {
-	flex: 1;
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
+/* 设置列表行：图标 + 类型标签（对齐原生 REGEX 等徽章） */
 .ribbon-folder-entry-row-icon {
 	flex-shrink: 0;
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	min-width: 1.25rem;
 	height: 1.25rem;
 	width: auto;
+	margin-right: 0.4em;
+	vertical-align: middle;
 	color: var(--text-muted);
 }
 
@@ -241,26 +20,9 @@
 	flex-shrink: 0;
 }
 
-/* label 与「命令 / 扩展名」标签 */
-.ribbon-folder-entry-row-text {
-	flex: 1;
-	min-width: 0;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 8px;
-}
-
-.ribbon-folder-entry-row-text .ribbon-folder-entry-row-label {
-	flex: 0 1 auto;
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.ribbon-folder-entry-row-text .ribbon-folder-entry-row-kind {
-	flex-shrink: 0;
+.ribbon-folder-setting-kind {
+	display: inline-block;
+	margin-left: 8px;
 	font-size: 10px;
 	font-weight: 500;
 	letter-spacing: 0.05em;
@@ -270,74 +32,14 @@
 	background: var(--background-modifier-hover);
 	color: var(--text-muted);
 	border: 1px solid var(--background-modifier-border);
+	vertical-align: middle;
+	text-transform: uppercase;
 }
 
-.ribbon-folder-entry-row-separator .ribbon-folder-entry-row-label {
+.ribbon-folder-setting-separator .setting-item-name {
 	opacity: 0.85;
 	font-style: italic;
 	color: var(--text-muted);
-}
-
-.ribbon-folder-entry-row-btns {
-	display: flex;
-	align-items: center;
-	gap: 2px;
-	flex-shrink: 0;
-}
-
-.ribbon-folder-entry-icon-btn {
-	flex-shrink: 0;
-	color: var(--text-muted);
-}
-
-.ribbon-folder-entry-icon-btn:hover {
-	color: var(--text-normal);
-	background-color: var(--background-modifier-hover);
-}
-
-.ribbon-folder-entry-icon-btn--danger:hover {
-	color: var(--text-error);
-}
-
-.ribbon-folder-entry-row.is-hidden .ribbon-folder-entry-row-main {
-	opacity: 0.45;
-}
-
-.ribbon-folder-entry-row.is-hidden .ribbon-folder-entry-icon-btn--visibility {
-	color: var(--text-accent);
-}
-
-.ribbon-folder-entry-hint {
-	font-size: 0.9em;
-	opacity: 0.8;
-	margin-left: 0.5em;
-}
-
-/* 命令列表拖拽 */
-.ribbon-folder-draggable-list {
-	min-height: 2em;
-}
-
-.ribbon-folder-draggable-row {
-	cursor: grab;
-}
-
-.ribbon-folder-draggable-row:active {
-	cursor: grabbing;
-}
-
-.ribbon-folder-draggable-row.ribbon-folder-dragging {
-	opacity: 0.5;
-}
-
-.ribbon-folder-draggable-row.ribbon-folder-drag-over {
-	background: var(--background-modifier-hover);
-	outline: 1px dashed var(--color-accent);
-}
-
-.ribbon-folder-order .setting-item-control {
-	display: flex;
-	gap: 0.5em;
 }
 
 /* 命令选择 Modal */

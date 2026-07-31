@@ -1,27 +1,17 @@
 {
     "translation": {
         "settings": {
-            "title": "Ribbon Folder Settings",
+            "title": "Ribbon Folder settings",
             "description": "Pin commands, files, or web links directly on the Ribbon, or group them behind folder buttons with pop-up menus.",
-            "tabs": {
-                "general": "General",
-                "pins": "Shortcuts",
-                "groups": "Groups"
-            },
-            "pinsList": "New shortcut",
-            "pinsListDescription": "Each shortcut appears as its own Ribbon button.",
-            "pinsEmpty": "(No shortcuts yet—use the buttons below to add one)",
             "iconFolder": {
-                "name": "Icon Folder",
-                "description": "Custom icon root directory. Icons can be Lucide names (e.g., dice), .svg files relative to this directory (e.g., add.svg), or full paths within your vault.",
+                "name": "Icon folder",
+                "description": "Custom icon root directory. Icons can be Lucide names (e.g. dice), .svg files relative to this directory (e.g. add.svg), or full vault paths.",
                 "placeholder": ".obsidian/icons or scripts/icons"
             },
             "addFolder": {
-                "name": "New Group",
+                "name": "New group",
                 "description": "Add a new button group to the Ribbon"
             },
-            "groupsList": "Groups List",
-            "groupsListDescription": "Click group rows to expand/collapse; drag handles to reorder groups.",
             "noteOpenLocation": {
                 "name": "Open files in",
                 "description": "Where to open a file when you click it from a Ribbon shortcut or group menu.",
@@ -30,10 +20,26 @@
                     "current": "Existing tab",
                     "split": "Split"
                 }
+            },
+            "pinsPage": {
+                "name": "Shortcuts",
+                "description": "Choose which commands, files, or web links appear directly on the ribbon.",
+                "empty": "No shortcuts yet",
+                "add": "Add shortcut"
+            },
+            "groupsPage": {
+                "name": "Groups",
+                "description": "Organize commands behind ribbon group buttons with pop-up menus.",
+                "empty": "No groups yet",
+                "add": "New group"
+            },
+            "folderItems": {
+                "add": "Add menu item"
             }
         },
         "folder": {
-            "delete": "Delete Group",
+            "delete": "Delete group",
+            "deleteDescription": "Remove this group and its menu items from the ribbon.",
             "deleteConfirmTitle": "Delete group",
             "deleteConfirm": "Are you sure you want to delete the group \"{{name}}\"?",
             "deleteConfirmCancel": "Cancel",
@@ -42,25 +48,25 @@
             "namePlaceholder": "Group name",
             "unnamed": "Unnamed",
             "icon": "Icon",
-            "iconDescription": "Lucide name (e.g., folder) or .svg path",
+            "iconDescription": "Lucide name (e.g. folder) or .svg path",
             "iconPlaceholder": "folder or add.svg or scripts/icons/add.svg",
             "selectSvg": "Select SVG",
-            "menuDisplay": "Menu Display",
-            "menuDisplayDescription": "How commands are displayed in the menu",
+            "menuDisplay": "Menu display",
+            "menuDisplayDescription": "How each command appears in the menu",
             "menuDisplayOptions": {
-                "icon-only": "Icon Only",
-                "label-only": "Label Only",
+                "icon-only": "Icon only",
+                "label-only": "Label only",
                 "both": "Both"
             },
-            "triggerMode": "Menu Trigger",
-            "triggerModeDescription": "Display menu when clicking or hovering the group icon",
+            "triggerMode": "Menu trigger",
+            "triggerModeDescription": "Show the menu on click or on hover",
             "triggerModeOptions": {
-                "click": "Click to Show",
-                "hover": "Hover to Show"
+                "click": "Click",
+                "hover": "Hover"
             },
-            "itemsSection": "Commands, files & web",
+            "itemsSection": "Menu items",
             "commandsHint": "(drag to reorder)",
-            "noItems": "(No menu items)",
+            "noItems": "No menu items yet",
             "itemsCount": "{{count}} items",
             "addCommand": "Add command",
             "addNote": "Add file",
