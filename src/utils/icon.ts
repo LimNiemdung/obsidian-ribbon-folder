@@ -3,8 +3,25 @@ import { App, addIcon } from "obsidian";
 const CUSTOM_ICON_PREFIX = "ribbon-folder-icon-";
 const ICON_ASPECT_RATIOS = new Map<string, number>();
 
+/** 宽高比达到此阈值时按长条形显示（菜单与设置列表共用） */
+export const WIDE_ICON_MIN_RATIO = 1.25;
+
 export function getIconAspect(iconId: string): number | undefined {
 	return ICON_ASPECT_RATIOS.get(iconId);
+}
+
+/** 按 SVG 宽高比加宽图标；非长条形则不改 */
+export function applyWideIconSize(
+	parentEl: HTMLElement,
+	iconId: string,
+	heightCss = "1rem"
+): void {
+	const ratio = getIconAspect(iconId) ?? 1;
+	if (ratio < WIDE_ICON_MIN_RATIO) return;
+	const svg = parentEl.querySelector("svg.svg-icon") as HTMLElement | null;
+	if (!svg) return;
+	svg.style.width = `calc(${heightCss} * ${ratio})`;
+	svg.style.height = heightCss;
 }
 
 export function normalizePath(p: string): string {

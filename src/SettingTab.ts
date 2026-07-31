@@ -25,7 +25,7 @@ import { EditNoteModal } from "./EditNoteModal";
 import { EditWebModal } from "./EditWebModal";
 import { NotePickerModal } from "./NotePickerModal";
 import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
-import { getSvgPathsInFolder, resolveIconId } from "./utils/icon";
+import { getSvgPathsInFolder, resolveIconId, applyWideIconSize } from "./utils/icon";
 import { t } from "./i18n";
 import { normalizeExternalUrl } from "./utils/url";
 
@@ -104,6 +104,26 @@ function createTrashSvg(): SVGSVGElement {
 		line1,
 		line2
 	);
+}
+
+/** 设置列表行上的图标按钮（编辑 / 移除 / 隐藏等） */
+function createEntryIconButton(
+	parent: HTMLElement,
+	icon: string,
+	label: string,
+	onClick: (e: MouseEvent) => void,
+	extraCls?: string
+): HTMLButtonElement {
+	const btn = parent.createEl("button", {
+		cls: "clickable-icon ribbon-folder-entry-icon-btn" + (extraCls ? ` ${extraCls}` : ""),
+		attr: { "aria-label": label },
+	});
+	setIcon(btn, icon);
+	btn.addEventListener("click", (e) => {
+		e.stopPropagation();
+		onClick(e);
+	});
+	return btn;
 }
 
 export class RibbonFolderSettingTab extends PluginSettingTab {
@@ -468,14 +488,13 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			const iconWrap = main.createSpan({ cls: "ribbon-folder-entry-row-icon" });
 			const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, this.plugin.app));
 			setIcon(iconWrap, iconId);
+			applyWideIconSize(iconWrap, iconId);
 			const textWrap = main.createDiv({ cls: "ribbon-folder-entry-row-text" });
 			textWrap.createSpan({ cls: "ribbon-folder-entry-row-label", text: displayName });
 			textWrap.createSpan({ cls: "ribbon-folder-entry-row-kind", text: this.entryKindLabel(entry) });
 
 			const btnWrap = row.createSpan({ cls: "ribbon-folder-entry-row-btns" });
-			const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
-			editBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
+			createEntryIconButton(btnWrap, "pencil", t("commands.editBtn"), () => {
 				this.openEditEntryModal(
 					entry,
 					() => {
@@ -490,16 +509,14 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					true
 				);
 			});
-			const removeBtn = btnWrap.createEl("button", { text: t("commands.removeBtn") });
-			removeBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
+			createEntryIconButton(btnWrap, "trash-2", t("commands.removeBtn"), () => {
 				void (async () => {
 					this.plugin.settings.pins = this.pins.filter((_, i) => i !== pinIndex);
 					this.plugin.removeRibbonForPin(pin.id);
 					await this.plugin.saveSettings();
 					this.display();
 				})();
-			});
+			}, "ribbon-folder-entry-icon-btn--danger");
 
 			row.addEventListener("dragstart", (e: DragEvent) => {
 				e.stopPropagation();
@@ -553,6 +570,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			row.setAttr("data-command-index", String(cmdIndex));
 			row.draggable = true;
 			row.addClass("ribbon-folder-draggable-row");
+			if (entry.hidden) row.addClass("is-hidden");
 
 			const main = row.createDiv({ cls: "ribbon-folder-entry-row-main" });
 			if (isRibbonSeparatorEntry(entry)) {
@@ -562,6 +580,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				const iconWrap = main.createSpan({ cls: "ribbon-folder-entry-row-icon" });
 				const iconId = await resolveIconId(this.plugin.app, iconFolder, getEntryIconRaw(entry, this.plugin.app));
 				setIcon(iconWrap, iconId);
+				applyWideIconSize(iconWrap, iconId);
 				const textWrap = main.createDiv({ cls: "ribbon-folder-entry-row-text" });
 				textWrap.createSpan({ cls: "ribbon-folder-entry-row-label", text: displayName });
 				textWrap.createSpan({ cls: "ribbon-folder-entry-row-kind", text: this.entryKindLabel(entry) });
@@ -570,9 +589,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			if (isRibbonSeparatorEntry(entry)) row.addClass("ribbon-folder-entry-row-separator");
 			const btnWrap = row.createSpan({ cls: "ribbon-folder-entry-row-btns" });
 			if (!isRibbonSeparatorEntry(entry)) {
-				const editBtn = btnWrap.createEl("button", { text: t("commands.editBtn") });
-				editBtn.addEventListener("click", (e) => {
-					e.stopPropagation();
+				createEntryIconButton(btnWrap, "pencil", t("commands.editBtn"), () => {
 					this.openEditEntryModal(entry, () => {
 						void this.plugin.saveSettings();
 						metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
@@ -580,16 +597,29 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					});
 				});
 			}
-			const removeBtn = btnWrap.createEl("button", { text: t("commands.removeBtn") });
-			removeBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
+			const hidden = !!entry.hidden;
+			createEntryIconButton(
+				btnWrap,
+				hidden ? "eye-off" : "eye",
+				hidden ? t("commands.showBtn") : t("commands.hideBtn"),
+				() => {
+					entry.hidden = !entry.hidden;
+					void (async () => {
+						await this.plugin.saveSettings();
+						entryListEl.empty();
+						await this.renderFolderEntryRows(entryListEl, folder, metaEl);
+					})();
+				},
+				"ribbon-folder-entry-icon-btn--visibility"
+			);
+			createEntryIconButton(btnWrap, "trash-2", t("commands.removeBtn"), () => {
 				void (async () => {
 					folder.commands = folder.commands.filter((_, i) => i !== cmdIndex);
 					await this.plugin.saveSettings();
 					metaEl.setText(t("folder.itemsCount", { count: folder.commands.length }));
 					this.display();
 				})();
-			});
+			}, "ribbon-folder-entry-icon-btn--danger");
 
 			row.addEventListener("dragstart", (e: DragEvent) => {
 				e.stopPropagation();

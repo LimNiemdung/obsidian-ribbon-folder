@@ -20,6 +20,7 @@ import type {
 } from "./types";
 import {
 	DEFAULT_SETTINGS,
+	isEntryHidden,
 	isRibbonNoteEntry,
 	isRibbonSeparatorEntry,
 	isRibbonWebEntry,
@@ -28,7 +29,7 @@ import { isUrlSafeToOpen, normalizeExternalUrl } from "./utils/url";
 import { getEntryIconRaw, getEntryLabel, type RibbonActionEntry } from "./utils/entry";
 import { listCommandsWithIcons } from "./utils/commands";
 import { getCssVarPx } from "./utils";
-import { resolveIconId, getIconAspect } from "./utils/icon";
+import { resolveIconId, applyWideIconSize } from "./utils/icon";
 import { RibbonFolderSettingTab } from "./SettingTab";
 import { t, updateLanguage } from "./i18n";
 
@@ -55,7 +56,6 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	settings: RibbonFolderSettings;
 	private ribbonEls: Map<string, HTMLElement> = new Map();
 	private skipNextOpenFolderId: string | null = null;
-	private static readonly WIDE_ICON_MIN_RATIO = 1.25;
 
 	async onload() {
 		await this.loadSettings();
@@ -181,6 +181,15 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		el.setAttribute("title", title);
 	}
 
+	/** Ribbon 只在主窗口；菜单与坐标一律相对主窗口，避免弹出到聚焦的 pop-out */
+	private getMainDoc(): Document {
+		return this.app.workspace.rootSplit.doc;
+	}
+
+	private getMainWin(): Window {
+		return this.app.workspace.rootSplit.win;
+	}
+
 	/** 命令面板：打开分组菜单（移动端侧栏 Ribbon 不便时可用；仅一个分组时直接打开） */
 	private openGroupPicker(): void {
 		const folders = this.settings.folders;
@@ -189,7 +198,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			return;
 		}
 		if (folders.length === 1) {
-			void this.showFolderMenu(folders[0], RibbonFolderPlugin.syntheticMenuAnchorEvent());
+			void this.showFolderMenu(folders[0], this.syntheticMenuAnchorEvent());
 			return;
 		}
 		const menu = new Menu();
@@ -197,19 +206,24 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		for (const f of folders) {
 			menu.addItem((item: MenuItem) => {
 				item.setTitle(f.name?.trim() || t("folder.unnamed"));
-				item.onClick(() => void this.showFolderMenu(f, RibbonFolderPlugin.syntheticMenuAnchorEvent()));
+				item.onClick(() => void this.showFolderMenu(f, this.syntheticMenuAnchorEvent()));
 			});
 		}
-		menu.showAtPosition({
-			x: Math.floor(window.innerWidth / 2),
-			y: Math.min(160, Math.floor(window.innerHeight * 0.12)),
-		});
+		const win = this.getMainWin();
+		menu.showAtPosition(
+			{
+				x: Math.floor(win.innerWidth / 2),
+				y: Math.min(160, Math.floor(win.innerHeight * 0.12)),
+			},
+			this.getMainDoc()
+		);
 	}
 
 	/** 无真实点击事件时用于菜单定位（命令面板 / 居中弹出） */
-	private static syntheticMenuAnchorEvent(): MouseEvent {
-		const x = Math.floor(window.innerWidth / 2);
-		const y = Math.min(160, Math.floor(window.innerHeight * 0.12));
+	private syntheticMenuAnchorEvent(): MouseEvent {
+		const win = this.getMainWin();
+		const x = Math.floor(win.innerWidth / 2);
+		const y = Math.min(160, Math.floor(win.innerHeight * 0.12));
 		return { clientX: x, clientY: y } as MouseEvent;
 	}
 
@@ -316,17 +330,10 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		menu.addItem((item: MenuItem) => {
 			if (displayMode !== "label-only" && iconId) {
 				item.setIcon(iconId as Parameters<MenuItem["setIcon"]>[0]);
-				const ratio = iconId ? getIconAspect(iconId) ?? 1 : 1;
-				if (ratio >= RibbonFolderPlugin.WIDE_ICON_MIN_RATIO) {
-					setTimeout(() => {
-						const anyItem = item as unknown as { iconEl?: HTMLElement };
-						const svg = anyItem?.iconEl?.querySelector?.("svg.svg-icon") as HTMLElement | null;
-						if (svg) {
-							svg.style.width = `calc(var(--icon-size) * ${ratio})`;
-							svg.style.height = `var(--icon-size)`;
-						}
-					}, 0);
-				}
+				setTimeout(() => {
+					const anyItem = item as unknown as { iconEl?: HTMLElement };
+					if (anyItem?.iconEl) applyWideIconSize(anyItem.iconEl, iconId, "var(--icon-size)");
+				}, 0);
 			} else if (displayMode === "label-only") item.setIcon(null);
 			if (displayMode !== "icon-only") item.setTitle(title);
 			else if (!iconId) item.setTitle(title);
@@ -352,7 +359,8 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 
 		const displayMode = folder.menuDisplay ?? "both";
 		const ctx = { displayMode, iconFolder };
-		for (const entry of folder.commands) {
+		const visibleEntries = folder.commands.filter((entry) => !isEntryHidden(entry));
+		for (const entry of visibleEntries) {
 			if (isRibbonSeparatorEntry(entry)) {
 				menu.addSeparator();
 				continue;
@@ -360,20 +368,22 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			await this.addMenuItemForEntry(menu, entry, ctx);
 		}
 
-		if (folder.commands.length === 0) {
+		if (visibleEntries.length === 0) {
 			menu.addItem((item: MenuItem) => {
 				item.setTitle(t("folder.noItems")).setDisabled(true);
 			});
 		}
 
+		const mainDoc = this.getMainDoc();
+		const mainWin = this.getMainWin();
 		const leftOffset = getCssVarPx("--size-4-2");
-		const ribbonRect = document.querySelector(".workspace-ribbon.mod-left")?.getBoundingClientRect();
+		const ribbonRect = mainDoc.querySelector(".workspace-ribbon.mod-left")?.getBoundingClientRect();
 		const x = ribbonRect ? ribbonRect.right - leftOffset : evt.clientX - leftOffset;
 		const folderRibbonEl = this.ribbonEls.get(folder.id);
 		const br = folderRibbonEl?.getBoundingClientRect();
 		// const y = br ? br.top + br.height / 2 : evt.clientY;
 		const y = br ? br.top : evt.clientY;
-		menu.showAtPosition({ x, y });
+		menu.showAtPosition({ x, y }, mainDoc);
 
 		const setDisplayAttr = (el: HTMLElement) => el.setAttribute("data-ribbon-folder-display", displayMode);
 		const menuContainerEl =
@@ -390,11 +400,11 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			if (hitOutside || hitRibbon) {
 				if (folderRibbonEl?.contains(target)) this.skipNextOpenFolderId = folder.id;
 				menu.close();
-				document.removeEventListener("pointerdown", closeIfOutside, true);
+				mainDoc.removeEventListener("pointerdown", closeIfOutside, true);
 			}
 		};
-		menu.onHide(() => document.removeEventListener("pointerdown", closeIfOutside, true));
-		setTimeout(() => document.addEventListener("pointerdown", closeIfOutside, true), 0);
+		menu.onHide(() => mainDoc.removeEventListener("pointerdown", closeIfOutside, true));
+		mainWin.setTimeout(() => mainDoc.addEventListener("pointerdown", closeIfOutside, true), 0);
 
 		const findMenuDomEl = (atX: number, atY: number): HTMLElement | null => {
 			const fromApi = (menu as unknown as { containerEl?: HTMLElement }).containerEl;
@@ -411,10 +421,10 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 				[atX + 80, atY + 40],
 			];
 			for (const [px, py] of points) {
-				const at = document.elementsFromPoint(px, py);
+				const at = mainDoc.elementsFromPoint(px, py);
 				for (const node of at) {
 					const el = node instanceof HTMLElement ? node : null;
-					if (!el || el === document.body) continue;
+					if (!el || el === mainDoc.body) continue;
 					if (isRibbonOrLayout(el)) continue;
 					const root = el.closest(".menu") ?? el.closest("[class*='menu']") ?? (el.classList?.contains("menu") ? el : null);
 					if (root && root instanceof HTMLElement && !isRibbonOrLayout(root)) return root;
@@ -431,14 +441,14 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			const ribbonEl = this.ribbonEls.get(folder.id);
 			if (!ribbonEl) return;
 			if (!el) {
-				if (attempt < 20) setTimeout(() => setupHoverClose(attempt + 1), 25);
+				if (attempt < 20) mainWin.setTimeout(() => setupHoverClose(attempt + 1), 25);
 				return;
 			}
 			const hoverMenuEl = el;
 			let closeTimer: number | null = null;
 			const HOVER_CLOSE_DELAY_MS = 120;
 			const isOverMenu = (cx: number, cy: number): boolean => {
-				const under = document.elementFromPoint(cx, cy);
+				const under = mainDoc.elementFromPoint(cx, cy);
 				if (under != null && hoverMenuEl.contains(under)) return true;
 				const r = hoverMenuEl.getBoundingClientRect();
 				const pad = 2;
@@ -448,19 +458,19 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 				const overRibbon = inRect(e.clientX, e.clientY, ribbonEl.getBoundingClientRect());
 				const overMenu = isOverMenu(e.clientX, e.clientY);
 				if (overRibbon || overMenu) {
-					if (closeTimer) clearTimeout(closeTimer);
+					if (closeTimer) mainWin.clearTimeout(closeTimer);
 					closeTimer = null;
 				} else if (!closeTimer) {
-					closeTimer = window.setTimeout(() => {
+					closeTimer = mainWin.setTimeout(() => {
 						menu.close();
 						closeTimer = null;
 					}, HOVER_CLOSE_DELAY_MS);
 				}
 			};
-			document.addEventListener("mousemove", onMouseMove);
+			mainDoc.addEventListener("mousemove", onMouseMove);
 			menu.onHide(() => {
-				document.removeEventListener("mousemove", onMouseMove);
-				if (closeTimer) clearTimeout(closeTimer);
+				mainDoc.removeEventListener("mousemove", onMouseMove);
+				if (closeTimer) mainWin.clearTimeout(closeTimer);
 			});
 		};
 		const trySetDisplayAttr = (): boolean => {
@@ -470,16 +480,16 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 		};
 		const applySubmenuDisplayAttr = (attempt = 0) => {
 			if (trySetDisplayAttr()) return;
-			if (attempt < 12) setTimeout(() => applySubmenuDisplayAttr(attempt + 1), 16);
+			if (attempt < 12) mainWin.setTimeout(() => applySubmenuDisplayAttr(attempt + 1), 16);
 		};
 		if (!menuContainerEl) {
 			queueMicrotask(() => {
-				if (!trySetDisplayAttr()) requestAnimationFrame(() => {
+				if (!trySetDisplayAttr()) mainWin.requestAnimationFrame(() => {
 					if (!trySetDisplayAttr()) applySubmenuDisplayAttr(0);
 				});
 			});
 		}
-		setTimeout(() => setupHoverClose(0), 0);
+		mainWin.setTimeout(() => setupHoverClose(0), 0);
 	}
 
 	getAllCommands(): CommandListItem[] {

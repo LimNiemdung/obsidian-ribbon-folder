@@ -93,7 +93,9 @@
                 "displayAs": "Display as"
             },
             "editBtn": "Edit",
-            "removeBtn": "Remove"
+            "removeBtn": "Remove",
+            "hideBtn": "Hide",
+            "showBtn": "Enable"
         },
         "web": {
             "openBlocked": "Cannot open this link (invalid or unsafe URL).",

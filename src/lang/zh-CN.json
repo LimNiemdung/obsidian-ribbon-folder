@@ -93,7 +93,9 @@
                 "displayAs": "菜单中显示为"
             },
             "editBtn": "编辑",
-            "removeBtn": "移除"
+            "removeBtn": "移除",
+            "hideBtn": "隐藏",
+            "showBtn": "启用"
         },
         "web": {
             "openBlocked": "无法打开该链接（地址无效或不安全）。",

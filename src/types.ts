@@ -25,6 +25,8 @@ export interface RibbonFolderCommandEntry {
 	displayName?: string;
 	/** 菜单项图标：Lucide 名（如 dice）或库内 .svg 路径；未填时默认 command */
 	icon?: string;
+	/** 为 true 时不出现在分组弹出菜单中，设置页仍保留 */
+	hidden?: boolean;
 }
 
 /** 分组内一条笔记（点击在编辑器中打开） */
@@ -35,6 +37,8 @@ export interface RibbonFolderNoteEntry {
 	displayName?: string;
 	/** 菜单项图标；未填时默认 file */
 	icon?: string;
+	/** 为 true 时不出现在分组弹出菜单中，设置页仍保留 */
+	hidden?: boolean;
 }
 
 /** 分组内一条网页（点击在系统浏览器中打开） */
@@ -45,11 +49,15 @@ export interface RibbonFolderWebEntry {
 	displayName?: string;
 	/** 菜单项图标；未填时默认 globe */
 	icon?: string;
+	/** 为 true 时不出现在分组弹出菜单中，设置页仍保留 */
+	hidden?: boolean;
 }
 
 /** 分组内一条分隔线（仅视觉分隔，无点击） */
 export interface RibbonFolderSeparatorEntry {
 	kind: "separator";
+	/** 为 true 时不出现在分组弹出菜单中，设置页仍保留 */
+	hidden?: boolean;
 }
 
 export type RibbonFolderEntry =
@@ -84,6 +92,10 @@ export function isRibbonWebEntry(e: RibbonFolderEntry): e is RibbonFolderWebEntr
 
 export function isRibbonCommandEntry(e: RibbonFolderEntry): e is RibbonFolderCommandEntry {
 	return e.kind !== "note" && e.kind !== "separator" && e.kind !== "web";
+}
+
+export function isEntryHidden(e: RibbonFolderEntry): boolean {
+	return !!e.hidden;
 }
 
 /** 命令菜单项默认 Lucide 图标 */
