@@ -24,8 +24,8 @@ import { EditCommandModal } from "./EditCommandModal";
 import { EditNoteModal } from "./EditNoteModal";
 import { EditWebModal } from "./EditWebModal";
 import { NotePickerModal } from "./NotePickerModal";
-import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
-import { getSvgPathsInFolder, resolveIconId, applyWideIconSize } from "./utils/icon";
+import { resolveIconId, applyWideIconSize } from "./utils/icon";
+import { addSelectSvgExtraButton } from "./utils/selectSvgButton";
 import { t } from "./i18n";
 import { normalizeExternalUrl } from "./utils/url";
 
@@ -124,6 +124,10 @@ function createEntryIconButton(
 		onClick(e);
 	});
 	return btn;
+}
+
+function setFolderChevron(el: HTMLElement, expanded: boolean): void {
+	setIcon(el, expanded ? "chevron-down" : "chevron-right");
 }
 
 export class RibbonFolderSettingTab extends PluginSettingTab {
@@ -419,7 +423,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 			if (block) {
 				block.addClass("is-expanded");
 				const chevron = block.querySelector(".ribbon-folder-folder-chevron");
-				if (chevron) chevron.setText("▾");
+				if (chevron instanceof HTMLElement) setFolderChevron(chevron, true);
 			}
 		});
 	}
@@ -717,7 +721,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		};
 
 		const chevron = header.createSpan({ cls: "ribbon-folder-folder-chevron" });
-		chevron.setText("▸");
+		setFolderChevron(chevron, false);
 		const headerIconEl = header.createSpan({ cls: "ribbon-folder-folder-header-icon" });
 		void this.setFolderHeaderIcon(headerIconEl, folder.icon || "folder");
 		const titleEl = header.createSpan({ cls: "ribbon-folder-folder-title", text: folder.name || t("folder.unnamed") });
@@ -754,7 +758,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				return;
 			const next = !block.hasClass("is-expanded");
 			block.toggleClass("is-expanded", next);
-			chevron.setText(next ? "▾" : "▸");
+			setFolderChevron(chevron, next);
 		};
 		header.onkeydown = (e) => {
 			if (e.key === "Enter" || e.key === " ") {
@@ -800,24 +804,21 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 								this.scheduleRefreshRibbonForFolder(folder);
 							})();
 						});
-				})
-				.addButton((btn) =>
-					btn.setButtonText(t("folder.selectSvg")).onClick(() => {
-						void (async () => {
-							const iconFolder = this.plugin.settings.iconFolder ?? "";
-							const items = await getSvgPathsInFolder(this.plugin.app, iconFolder || "");
-							new SvgIconSuggestModal(this.plugin.app, items, (path) => {
-								folderIconInput.value = path;
-								folder.icon = path;
-								void (async () => {
-									await this.plugin.saveSettings();
-									await this.setFolderHeaderIcon(headerIconEl, folder.icon);
-									await this.refreshRibbonForFolder(folder);
-								})();
-							}).open();
-						})();
-					})
-				);
+				});
+			addSelectSvgExtraButton(
+				setting,
+				this.plugin.app,
+				() => this.plugin.settings.iconFolder ?? "",
+				(path) => {
+					folderIconInput.value = path;
+					folder.icon = path;
+					void (async () => {
+						await this.plugin.saveSettings();
+						await this.setFolderHeaderIcon(headerIconEl, folder.icon);
+						await this.refreshRibbonForFolder(folder);
+					})();
+				}
+			);
 		});
 
 		folderSettings.addSetting((setting) => {

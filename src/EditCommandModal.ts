@@ -1,9 +1,8 @@
 import { App, Modal, Setting } from "obsidian";
 import type { RibbonFolderCommandEntry } from "./types";
 import { CommandPickerModal } from "./CommandPickerModal";
-import { SvgIconSuggestModal } from "./SvgIconSuggestModal";
 import { listCommandsWithIcons } from "./utils/commands";
-import { getSvgPathsInFolder } from "./utils/icon";
+import { addSelectSvgExtraButton } from "./utils/selectSvgButton";
 import { t } from "./i18n";
 import { entryDisplayLabelKeys } from "./utils/editLabels";
 
@@ -59,21 +58,16 @@ export class EditCommandModal extends Modal {
 			});
 
 		let iconInput: HTMLInputElement;
-		new Setting(contentEl)
+		const iconSetting = new Setting(contentEl)
 			.setName(t("commands.edit.icon"))
 			.setDesc(t("commands.edit.iconDescription"))
 			.addText((text) => {
 				iconInput = text.inputEl;
 				text.setPlaceholder(t("commands.edit.iconPlaceholder")).setValue(icon);
-			})
-			.addButton((btn) =>
-				btn.setButtonText(t("folder.selectSvg")).onClick(async () => {
-					const items = await getSvgPathsInFolder(this.app, this.iconFolder || "");
-					new SvgIconSuggestModal(this.app, items, (path) => {
-						iconInput.value = path;
-					}).open();
-				})
-			);
+			});
+		addSelectSvgExtraButton(iconSetting, this.app, () => this.iconFolder || "", (path) => {
+			iconInput.value = path;
+		});
 
 		new Setting(contentEl).addButton((btn) =>
 			btn.setButtonText(t("commands.edit.confirm")).onClick(() => {

@@ -93,9 +93,17 @@
 
 .ribbon-folder-folder-chevron {
 	flex-shrink: 0;
-	width: 1.2em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--icon-xs);
+	height: var(--icon-xs);
 	color: var(--text-muted);
-	font-size: 0.9em;
+}
+
+.ribbon-folder-folder-chevron svg.svg-icon {
+	width: var(--icon-xs);
+	height: var(--icon-xs);
 }
 
 .ribbon-folder-folder-header-icon {
