@@ -1,4 +1,5 @@
 import i18next from "i18next";
+import type { Resource, TFunction } from "i18next";
 import { getLanguage } from "obsidian";
 
 import en from "./lang/en.json";
@@ -46,6 +47,11 @@ function getObsidianLanguage(): string {
   return language || "en";
 }
 
+const resources: Resource = {
+  en,
+  "zh-CN": zhCN,
+};
+
 // 初始化 i18next
 void i18next.init({
   lng: getObsidianLanguage(),
@@ -55,17 +61,15 @@ void i18next.init({
     "zh": ["zh-CN", "en"],
     default: ["en"]
   },
-  resources: {
-    en: en,
-    "zh-CN": zhCN
-  },
+  resources,
   interpolation: {
     escapeValue: false
   }
 });
 
 // 导出翻译函数
-export const t = i18next.t.bind(i18next);
+export const t: TFunction = ((...args: Parameters<TFunction>) =>
+  i18next.t(...args)) as TFunction;
 
 // 导出 i18next 实例以便高级使用
 export { i18next };

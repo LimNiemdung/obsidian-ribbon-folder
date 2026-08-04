@@ -111,7 +111,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	}
 
 	private scheduleRebuildRibbons(): void {
-		if (this.rebuildRibbonsTimer != null) clearTimeout(this.rebuildRibbonsTimer);
+		if (this.rebuildRibbonsTimer != null) window.clearTimeout(this.rebuildRibbonsTimer);
 		this.rebuildRibbonsTimer = window.setTimeout(() => {
 			this.rebuildRibbonsTimer = null;
 			void this.plugin.rebuildRibbons();
@@ -121,7 +121,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	private scheduleRefreshRibbonForFolder(folder: RibbonFolder): void {
 		const id = folder.id;
 		const existing = this.refreshFolderTimers.get(id);
-		if (existing != null) clearTimeout(existing);
+		if (existing != null) window.clearTimeout(existing);
 		this.refreshFolderTimers.set(
 			id,
 			window.setTimeout(() => {
@@ -139,7 +139,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	private scheduleRefreshRibbonForPin(pin: RibbonPin): void {
 		const id = pin.id;
 		const existing = this.refreshFolderTimers.get(id);
-		if (existing != null) clearTimeout(existing);
+		if (existing != null) window.clearTimeout(existing);
 		this.refreshFolderTimers.set(
 			id,
 			window.setTimeout(() => {

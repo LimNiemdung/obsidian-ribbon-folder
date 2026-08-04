@@ -1,73 +1,66 @@
-# Ribbon Folder Plugin for Obsidian
+# Ribbon Folder
 
-Organize multiple commands into grouped buttons on the Obsidian Ribbon, click to expand and execute commands from a menu for a cleaner interface.
-
-**This plugin was developed by AI.**
+Organize Obsidian’s left Ribbon: pin commands, files, and web links as one-click shortcuts, or tuck them into group buttons with pop-up menus.
 
 ## Features
 
-- **Create Groups**: Create custom command groups as buttons on the Obsidian Ribbon (left sidebar)
-- **Menu Display**: Click group buttons to show all commands in that group as a menu
-- **Icon Support**: Supports Lucide icon library or custom SVG icons
-- **Menu Configuration**: Configure how commands are displayed (icons only/labels only/both)
-- **Trigger Methods**: Support click or hover to display menus
+### Shortcuts
+- Pin **commands**, **vault files**, or **web links** directly on the Ribbon
+- Each pin is a single button that runs immediately (no menu)
+- Drag to reorder; customize tooltip and icon
+
+### Groups
+- Create group buttons that open a pop-up menu
+- Menu items can be commands, files, web links
+- Per-group options:
+  - **Menu display**: icon only / label only / both
+  - **Trigger**: click or hover
+- Custom display names and icons per item
+
+### Icons
+- Lucide icon names (e.g. `folder`, `globe`)
+- Custom `.svg` files via an icon folder, relative path, or full vault path
+
+### Other
+- Global setting for where files open: new tab / current tab / split
 
 ## Installation
 
-### Method 1: Direct Installation (Recommended)
+### Community plugins (recommended)
 
-1. Open Obsidian Settings
-2. Click "Community Plugins"
-3. Click "Browse"
-4. Search for "Ribbon Folder"
-5. Click "Install"
-6. After installation, click "Enable"
+1. Settings → Community plugins → Browse
+2. Search for **Ribbon Folder**
+3. Install → Enable
 
-### Method 2: Manual Installation
+### Manual
 
-1. Download plugin files (main.js, manifest.json, styles.css)
-2. Create a folder `VaultFolder/.obsidian/plugins/ribbon-folder/` in your Obsidian vault
-3. Place the downloaded files in this folder
-4. Open Obsidian Settings → Community Plugins → Enable "Ribbon Folder"
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/LimNiemdung/obsidian-ribbon-folder/releases)
+2. Put them in `VaultFolder/.obsidian/plugins/ribbon-folder/`
+3. Enable **Ribbon Folder** under Community plugins
+
+Requires Obsidian **1.13.0** or newer.
 
 ## Usage
 
-### 1. Configure the Plugin
+### Shortcuts
 
-After installation, a "Ribbon Folder Settings" tab will be added to Obsidian Settings:
+1. Open **Settings → Ribbon Folder → Shortcuts**
+2. Add a command, file, or web link
+3. Optionally set a tooltip and icon
+4. The button appears on the Ribbon; click to run / open
 
-#### Global Settings
-- **Icon Folder**: Set the path for custom SVG icons (optional)
+### Groups
 
-#### Create and Manage Groups
-1. Click "New Group" to create a new command group
-2. Configure each group:
-   - Group name (displayed on the Ribbon)
-   - Icon (Lucide icon name or custom SVG path)
-   - Menu display mode (icons only/labels only/both)
-   - Menu trigger method (click or hover to display)
+1. Open **Settings → Ribbon Folder → Groups**
+2. Create a group; set name, icon, menu display, and trigger
+3. Add menu items (command / file / web link / separator)
+4. Click (or hover) the Ribbon group button to open the menu
 
-#### Add Commands to Groups
-1. Expand group settings
-2. Click "Add Command" button
-3. Search for and select the command you want to add in the command picker
-4. Optionally set a custom display name and icon for commands
+### Custom icons
 
-### 2. Use Group Menus
-
-- Created groups will appear on the Obsidian Ribbon (left sidebar)
-- Click a group button to show all commands in that group
-- Click any command to execute it directly
-
-## Supported Languages
-
-- English - Default language
-- Chinese (Simplified)
-
-## Supported Obsidian Versions
-
-Requires Obsidian version 1.8.7 or higher.
+1. Set **Icon folder** (e.g. `.obsidian/icons` or `scripts/icons`)
+2. In any icon field, use a Lucide name, a file under that folder (e.g. `add.svg`), or a full vault path
 
 ## Feedback
 
-If you encounter any issues or have improvement suggestions, please submit an issue on the GitHub repository.
+Issues and suggestions: [GitHub Issues](https://github.com/LimNiemdung/obsidian-ribbon-folder/issues)

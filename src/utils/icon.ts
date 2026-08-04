@@ -18,7 +18,7 @@ export function applyWideIconSize(
 ): void {
 	const ratio = getIconAspect(iconId) ?? 1;
 	if (ratio < WIDE_ICON_MIN_RATIO) return;
-	const svg = parentEl.querySelector("svg.svg-icon") as HTMLElement | null;
+	const svg = parentEl.querySelector<SVGElement>("svg.svg-icon");
 	if (!svg) return;
 	svg.style.width = `calc(${heightCss} * ${ratio})`;
 	svg.style.height = heightCss;

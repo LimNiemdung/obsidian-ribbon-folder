@@ -82,7 +82,8 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data = (await this.loadData()) as Partial<RibbonFolderSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data ?? {});
 		if (!this.settings.pins) {
 			this.settings.pins = [];
 		}
@@ -264,7 +265,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	 */
 	private bindNoteItemHover(item: MenuItem, path: string, retriesLeft = 25): void {
 		const el = (item as unknown as { dom?: HTMLElement }).dom;
-		if (el instanceof HTMLElement) {
+		if (el?.instanceOf(HTMLElement)) {
 			el.addEventListener("mouseenter", (e: MouseEvent) => {
 				this.triggerNotePagePreview(el, path, e);
 			});
@@ -329,8 +330,8 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 				: null;
 		menu.addItem((item: MenuItem) => {
 			if (displayMode !== "label-only" && iconId) {
-				item.setIcon(iconId as Parameters<MenuItem["setIcon"]>[0]);
-				setTimeout(() => {
+				item.setIcon(iconId);
+				window.setTimeout(() => {
 					const anyItem = item as unknown as { iconEl?: HTMLElement };
 					if (anyItem?.iconEl) applyWideIconSize(anyItem.iconEl, iconId, "var(--icon-size)");
 				}, 0);
@@ -423,11 +424,11 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			for (const [px, py] of points) {
 				const at = mainDoc.elementsFromPoint(px, py);
 				for (const node of at) {
-					const el = node instanceof HTMLElement ? node : null;
+					const el = node.instanceOf(HTMLElement) ? node : null;
 					if (!el || el === mainDoc.body) continue;
 					if (isRibbonOrLayout(el)) continue;
 					const root = el.closest(".menu") ?? el.closest("[class*='menu']") ?? (el.classList?.contains("menu") ? el : null);
-					if (root && root instanceof HTMLElement && !isRibbonOrLayout(root)) return root;
+					if (root && root.instanceOf(HTMLElement) && !isRibbonOrLayout(root)) return root;
 					const r = el.getBoundingClientRect();
 					if (r.width > 30 && r.height > 20 && r.width < 450 && r.height < 600) return el;
 				}

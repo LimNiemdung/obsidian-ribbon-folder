@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import process from "process";
 import { fileURLToPath } from "url";
-import builtins from "builtin-modules";
+import { builtinModules } from "node:module";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,7 +36,7 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtins],
+		...builtinModules],
 	format: "cjs",
 	target: "es2018",
 	logLevel: "info",
