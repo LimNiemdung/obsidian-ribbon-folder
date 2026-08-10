@@ -93,7 +93,9 @@
                 "iconDescription": "Lucide 名（如 file-text）或库内 .svg 路径",
                 "iconPlaceholder": "file-text 或 add.svg 或 scripts/icons/add.svg",
                 "change": "更改命令",
-                "confirm": "确定"
+                "confirm": "确定",
+                "cancel": "取消",
+                "save": "保存"
             },
             "rename": {
                 "title": "重命名显示",

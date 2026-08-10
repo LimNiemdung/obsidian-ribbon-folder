@@ -465,19 +465,6 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					desc: t("folder.iconDescription"),
 					render: (setting) => {
 						let iconInput: HTMLInputElement;
-						setting.addText((text) => {
-							iconInput = text.inputEl;
-							text
-								.setPlaceholder(t("folder.iconPlaceholder"))
-								.setValue(folder.icon)
-								.onChange((value) => {
-									folder.icon = value || "folder";
-									void (async () => {
-										await this.plugin.saveSettings();
-										this.scheduleRefreshRibbonForFolder(folder);
-									})();
-								});
-						});
 						addSelectSvgExtraButton(
 							setting,
 							this.plugin.app,
@@ -491,6 +478,19 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 								})();
 							}
 						);
+						setting.addText((text) => {
+							iconInput = text.inputEl;
+							text
+								.setPlaceholder(t("folder.iconPlaceholder"))
+								.setValue(folder.icon)
+								.onChange((value) => {
+									folder.icon = value || "folder";
+									void (async () => {
+										await this.plugin.saveSettings();
+										this.scheduleRefreshRibbonForFolder(folder);
+									})();
+								});
+						});
 					},
 				},
 				{

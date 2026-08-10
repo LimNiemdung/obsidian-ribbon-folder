@@ -47,29 +47,38 @@ export class EditWebModal extends Modal {
 		let iconInput: HTMLInputElement;
 		const iconSetting = new Setting(contentEl)
 			.setName(t("web.edit.icon"))
-			.setDesc(t("web.edit.iconDescription"))
-			.addText((text) => {
-				iconInput = text.inputEl;
-				text.setPlaceholder(t("web.edit.iconPlaceholder")).setValue(this.entry.icon?.trim() ?? "");
-			});
+			.setDesc(t("web.edit.iconDescription"));
 		addSelectSvgExtraButton(iconSetting, this.app, () => this.iconFolder || "", (path) => {
 			iconInput.value = path;
 		});
+		iconSetting.addText((text) => {
+			iconInput = text.inputEl;
+			text.setPlaceholder(t("web.edit.iconPlaceholder")).setValue(this.entry.icon?.trim() ?? "");
+		});
 
-		new Setting(contentEl).addButton((btn) =>
-			btn.setButtonText(t("commands.edit.confirm")).onClick(() => {
-				const url = urlInput?.value?.trim() ?? "";
-				if (!url) {
-					return;
-				}
-				this.onConfirm({
-					url,
-					displayName: displayNameInput?.value?.trim() || undefined,
-					icon: iconInput?.value?.trim() || undefined,
-				});
-				this.close();
-			})
-		);
+		new Setting(contentEl)
+			.addButton((btn) =>
+				btn.setButtonText(t("commands.edit.cancel")).onClick(() => {
+					this.close();
+				})
+			)
+			.addButton((btn) =>
+				btn
+					.setButtonText(t("commands.edit.save"))
+					.setCta()
+					.onClick(() => {
+						const url = urlInput?.value?.trim() ?? "";
+						if (!url) {
+							return;
+						}
+						this.onConfirm({
+							url,
+							displayName: displayNameInput?.value?.trim() || undefined,
+							icon: iconInput?.value?.trim() || undefined,
+						});
+						this.close();
+					})
+			);
 	}
 
 	onClose() {

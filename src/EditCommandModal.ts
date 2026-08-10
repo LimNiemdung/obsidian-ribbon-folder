@@ -60,25 +60,34 @@ export class EditCommandModal extends Modal {
 		let iconInput: HTMLInputElement;
 		const iconSetting = new Setting(contentEl)
 			.setName(t("commands.edit.icon"))
-			.setDesc(t("commands.edit.iconDescription"))
-			.addText((text) => {
-				iconInput = text.inputEl;
-				text.setPlaceholder(t("commands.edit.iconPlaceholder")).setValue(icon);
-			});
+			.setDesc(t("commands.edit.iconDescription"));
 		addSelectSvgExtraButton(iconSetting, this.app, () => this.iconFolder || "", (path) => {
 			iconInput.value = path;
 		});
+		iconSetting.addText((text) => {
+			iconInput = text.inputEl;
+			text.setPlaceholder(t("commands.edit.iconPlaceholder")).setValue(icon);
+		});
 
-		new Setting(contentEl).addButton((btn) =>
-			btn.setButtonText(t("commands.edit.confirm")).onClick(() => {
-				this.onConfirm({
-					id: currentId,
-					displayName: displayNameInput?.value?.trim() || undefined,
-					icon: iconInput?.value?.trim() || undefined,
-				});
-				this.close();
-			})
-		);
+		new Setting(contentEl)
+			.addButton((btn) =>
+				btn.setButtonText(t("commands.edit.cancel")).onClick(() => {
+					this.close();
+				})
+			)
+			.addButton((btn) =>
+				btn
+					.setButtonText(t("commands.edit.save"))
+					.setCta()
+					.onClick(() => {
+						this.onConfirm({
+							id: currentId,
+							displayName: displayNameInput?.value?.trim() || undefined,
+							icon: iconInput?.value?.trim() || undefined,
+						});
+						this.close();
+					})
+			);
 	}
 
 	onClose() {
