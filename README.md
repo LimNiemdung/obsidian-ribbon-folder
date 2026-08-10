@@ -2,6 +2,8 @@
 
 Organize Obsidian’s left Ribbon: pin commands, files, and web links as one-click shortcuts, or tuck them into group buttons with pop-up menus.
 
+![Ribbon Folder](assets/screenshot.png)
+
 ## Features
 
 ### Shortcuts
