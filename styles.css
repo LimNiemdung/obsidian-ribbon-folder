@@ -1,6 +1,14 @@
 /* Ribbon Folder 插件样式 */
 
-/* 设置列表行：图标 + 类型标签（对齐原生 REGEX 等徽章） */
+/* 设置列表行：图标 + 文字 + 类型标签垂直居中 */
+.setting-item-name:has(.ribbon-folder-entry-row-icon),
+.setting-item-name:has(.ribbon-folder-setting-kind) {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0;
+}
+
 .ribbon-folder-entry-row-icon {
 	flex-shrink: 0;
 	display: inline-flex;
@@ -10,7 +18,6 @@
 	height: 1.25rem;
 	width: auto;
 	margin-right: 0.4em;
-	vertical-align: middle;
 	color: var(--text-muted);
 }
 
@@ -21,18 +28,18 @@
 }
 
 .ribbon-folder-setting-kind {
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
 	margin-left: 8px;
 	font-size: 10px;
 	font-weight: 500;
 	letter-spacing: 0.05em;
-	line-height: 1.2;
+	line-height: 1;
 	padding: 2px 4px;
 	border-radius: 4px;
 	background: var(--background-modifier-hover);
 	color: var(--text-muted);
 	border: 1px solid var(--background-modifier-border);
-	vertical-align: middle;
 	text-transform: uppercase;
 }
 
