@@ -1,8 +1,7 @@
 /* Ribbon Folder 插件样式 */
 
 /* 设置列表行：图标 + 文字 + 类型标签垂直居中 */
-.setting-item-name:has(.ribbon-folder-entry-row-icon),
-.setting-item-name:has(.ribbon-folder-setting-kind) {
+.ribbon-folder-entry-row {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;

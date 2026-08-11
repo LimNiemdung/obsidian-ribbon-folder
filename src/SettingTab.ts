@@ -603,6 +603,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 		setting: Setting,
 		entry: RibbonFolderCommandEntry | RibbonFolderNoteEntry | RibbonFolderWebEntry
 	): void {
+		setting.nameEl.addClass("ribbon-folder-entry-row");
 		const iconWrap = setting.nameEl.createSpan({ cls: "ribbon-folder-entry-row-icon" });
 		setting.nameEl.prepend(iconWrap);
 		const iconFolder = this.plugin.settings.iconFolder ?? "";

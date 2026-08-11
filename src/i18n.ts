@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import type { Resource, TFunction } from "i18next";
+import type { Resource, ResourceLanguage, TFunction } from "i18next";
 import { getLanguage } from "obsidian";
 
 import en from "./lang/en.json";
@@ -47,9 +47,27 @@ function getObsidianLanguage(): string {
   return language || "en";
 }
 
+function isResourceLanguage(value: unknown): value is ResourceLanguage {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  return Object.values(value).every(
+    (entry) => typeof entry === "string" || isResourceLanguage(entry)
+  );
+}
+
+function parseResourceLanguage(value: unknown, language: string): ResourceLanguage {
+  if (!isResourceLanguage(value)) {
+    throw new TypeError(`Invalid translation resource for ${language}`);
+  }
+
+  return value;
+}
+
 const resources: Resource = {
-  en,
-  "zh-CN": zhCN,
+  en: parseResourceLanguage(en as unknown, "en"),
+  "zh-CN": parseResourceLanguage(zhCN as unknown, "zh-CN"),
 };
 
 // 初始化 i18next
