@@ -10,5 +10,8 @@ export type {
 	RibbonFolderSeparatorEntry,
 	RibbonFolderEntry,
 	RibbonFolderSettings,
+	OpenLocation,
+	FileOpenLocation,
+	EntryOpenLocation,
 	NoteOpenLocation,
 } from "./src/plugin";

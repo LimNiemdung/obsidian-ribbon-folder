@@ -15,7 +15,26 @@ export type MenuDisplayMode = "icon-only" | "label-only" | "both";
 /** 菜单触发方式：点击图标或悬停图标 */
 export type MenuTriggerMode = "click" | "hover";
 
-/** 点击菜单中的库内文件时在何处打开 */
+/** 打开文件或网页的位置 */
+export type OpenLocation =
+	| "tab"
+	| "current"
+	| "split-right"
+	| "split-left"
+	| "split-up"
+	| "split-down"
+	| "left"
+	| "right"
+	| "window"
+	| "browser";
+
+/** 库内文件支持的打开位置（不含系统浏览器） */
+export type FileOpenLocation = Exclude<OpenLocation, "browser">;
+
+/** 菜单项单独设置；default 表示跟随全局默认 */
+export type EntryOpenLocation = "default" | OpenLocation;
+
+/** @deprecated 使用 FileOpenLocation；保留旧版 split 值供外部类型兼容 */
 export type NoteOpenLocation = "tab" | "current" | "split";
 
 /** 分组内一条命令（菜单项） */
@@ -37,11 +56,13 @@ export interface RibbonFolderNoteEntry {
 	displayName?: string;
 	/** 菜单项图标；未填时默认 file */
 	icon?: string;
+	/** 打开位置；未填或 default 时使用全局默认 */
+	openLocation?: EntryOpenLocation;
 	/** 为 true 时不出现在分组弹出菜单中，设置页仍保留 */
 	hidden?: boolean;
 }
 
-/** 分组内一条网页（点击在系统浏览器中打开） */
+/** 分组内一条网页（点击在 Obsidian 内嵌浏览器或系统浏览器中打开） */
 export interface RibbonFolderWebEntry {
 	kind: "web";
 	/** 完整 URL 或可补全为 https 的域名（如 example.com/path） */
@@ -49,6 +70,8 @@ export interface RibbonFolderWebEntry {
 	displayName?: string;
 	/** 菜单项图标；未填时默认 globe */
 	icon?: string;
+	/** 打开位置；未填或 default 时使用全局默认 */
+	openLocation?: EntryOpenLocation;
 	/** 为 true 时不出现在分组弹出菜单中，设置页仍保留 */
 	hidden?: boolean;
 }
@@ -123,7 +146,13 @@ export interface RibbonFolderSettings {
 	pins?: RibbonPin[];
 	/** 自定义图标根目录，图标字段可填相对此目录的 .svg（如 add.svg）或库内完整路径 */
 	iconFolder?: string;
-	/** 文件菜单项点击后打开位置，默认新标签页 */
+	/** 文件菜单项的默认打开位置 */
+	defaultFileOpenLocation?: FileOpenLocation;
+	/** 网页菜单项的默认打开位置 */
+	defaultWebOpenLocation?: OpenLocation;
+	/** @deprecated 使用 defaultFileOpenLocation 与 defaultWebOpenLocation */
+	defaultOpenLocation?: OpenLocation;
+	/** @deprecated 使用 defaultFileOpenLocation */
 	noteOpenLocation?: NoteOpenLocation;
 }
 
@@ -146,5 +175,6 @@ export interface IRibbonFolderPlugin {
 export const DEFAULT_SETTINGS: RibbonFolderSettings = {
 	folders: [],
 	pins: [],
-	noteOpenLocation: "tab",
+	defaultFileOpenLocation: "tab",
+	defaultWebOpenLocation: "tab",
 };

@@ -12,14 +12,13 @@
                 "name": "新建分组",
                 "description": "在 Ribbon 上添加一个新按钮组"
             },
-            "noteOpenLocation": {
-                "name": "打开文件的位置",
-                "description": "从 Ribbon 快捷项或分组菜单打开文件时，在何处打开。",
-                "options": {
-                    "tab": "新标签页",
-                    "current": "当前标签页",
-                    "split": "分屏"
-                }
+            "defaultFileOpenLocation": {
+                "name": "文件默认打开位置",
+                "description": "文件菜单项的默认打开位置；可在各菜单项编辑页单独覆盖。"
+            },
+            "defaultWebOpenLocation": {
+                "name": "网页默认打开位置",
+                "description": "网页菜单项的默认打开位置；可在各菜单项编辑页单独覆盖。"
             },
             "pinsPage": {
                 "name": "快捷项",
@@ -116,8 +115,8 @@
             "edit": {
                 "title": "编辑网页",
                 "url": "网址",
-                "urlDescription": "完整 URL（https://…）或域名；未写协议时默认使用 https。",
-                "urlPlaceholder": "https://example.com 或 example.com",
+                "urlDescription": "要打开的网址。",
+                "urlPlaceholder": "example.com",
                 "display": "菜单显示名",
                 "displayDescription": "在菜单中显示的名称（留空则显示网址）",
                 "displayPlaceholder": "显示名称",
@@ -147,6 +146,23 @@
             "displayDescriptionNote": "功能区按钮的悬停提示（留空则使用文件名）",
             "displayDescriptionWeb": "功能区按钮的悬停提示（留空则使用网址）",
             "displayPlaceholder": "自定义说明"
+        },
+        "openLocation": {
+            "name": "打开位置",
+            "entryDescription": "选「默认」则跟随全局设置。",
+            "options": {
+                "default": "默认",
+                "tab": "新标签页",
+                "current": "当前标签页",
+                "split-right": "分屏（右侧）",
+                "split-left": "分屏（左侧）",
+                "split-up": "分屏（上方）",
+                "split-down": "分屏（下方）",
+                "left": "左侧栏",
+                "right": "右侧栏",
+                "window": "新窗口",
+                "browser": "系统浏览器"
+            }
         },
         "plugin": {
             "openGroupMenu": "Ribbon Folder：打开分组菜单…",

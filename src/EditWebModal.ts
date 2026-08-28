@@ -1,6 +1,12 @@
 import { App, Modal, Setting } from "obsidian";
-import type { RibbonFolderWebEntry } from "./types";
+import type { RibbonFolderWebEntry, EntryOpenLocation } from "./types";
 import { addSelectSvgExtraButton } from "./utils/selectSvgButton";
+import {
+	isWebViewerAvailable,
+	WEB_ENTRY_OPEN_LOCATION_KEYS,
+	normalizeEntryOpenLocation,
+	openLocationLabel,
+} from "./utils/openLocation";
 import { t } from "./i18n";
 import { entryDisplayLabelKeys } from "./utils/editLabels";
 
@@ -8,6 +14,7 @@ export type EditWebResult = {
 	url: string;
 	displayName?: string;
 	icon?: string;
+	openLocation?: EntryOpenLocation;
 };
 
 export class EditWebModal extends Modal {
@@ -56,6 +63,21 @@ export class EditWebModal extends Modal {
 			text.setPlaceholder(t("web.edit.iconPlaceholder")).setValue(this.entry.icon?.trim() ?? "");
 		});
 
+		let openLocation: EntryOpenLocation = this.entry.openLocation ?? "default";
+		if (isWebViewerAvailable(this.app)) {
+			new Setting(contentEl)
+				.setName(t("openLocation.name"))
+				.setDesc(t("openLocation.entryDescription"))
+				.addDropdown((drop) => {
+					for (const key of WEB_ENTRY_OPEN_LOCATION_KEYS) {
+						drop.addOption(key, openLocationLabel(key));
+					}
+					drop.setValue(openLocation).onChange((value) => {
+						openLocation = value as EntryOpenLocation;
+					});
+				});
+		}
+
 		new Setting(contentEl)
 			.addButton((btn) =>
 				btn.setButtonText(t("commands.edit.cancel")).onClick(() => {
@@ -75,6 +97,7 @@ export class EditWebModal extends Modal {
 							url,
 							displayName: displayNameInput?.value?.trim() || undefined,
 							icon: iconInput?.value?.trim() || undefined,
+							openLocation: normalizeEntryOpenLocation(openLocation),
 						});
 						this.close();
 					})

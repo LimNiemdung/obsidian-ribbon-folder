@@ -19,7 +19,8 @@ import type {
 	RibbonFolderNoteEntry,
 	RibbonFolderWebEntry,
 	RibbonPin,
-	NoteOpenLocation,
+	FileOpenLocation,
+	OpenLocation,
 } from "./types";
 import {
 	isRibbonCommandEntry,
@@ -36,6 +37,12 @@ import { EditWebModal } from "./EditWebModal";
 import { NotePickerModal } from "./NotePickerModal";
 import { resolveIconId, applyWideIconSize } from "./utils/icon";
 import { addSelectSvgExtraButton } from "./utils/selectSvgButton";
+import {
+	FILE_OPEN_LOCATION_KEYS,
+	isWebViewerAvailable,
+	OPEN_LOCATION_KEYS,
+	openLocationLabel,
+} from "./utils/openLocation";
 import { t } from "./i18n";
 import { normalizeExternalUrl } from "./utils/url";
 
@@ -50,11 +57,12 @@ const TRIGGER_MODE_OPTIONS: Record<MenuTriggerMode, string> = {
 	click: t("folder.triggerModeOptions.click"),
 	hover: t("folder.triggerModeOptions.hover"),
 };
-const NOTE_OPEN_OPTIONS: Record<NoteOpenLocation, string> = {
-	tab: t("settings.noteOpenLocation.options.tab"),
-	current: t("settings.noteOpenLocation.options.current"),
-	split: t("settings.noteOpenLocation.options.split"),
-};
+const OPEN_LOCATION_OPTIONS: Record<OpenLocation, string> = Object.fromEntries(
+	OPEN_LOCATION_KEYS.map((key) => [key, openLocationLabel(key)])
+) as Record<OpenLocation, string>;
+const FILE_OPEN_LOCATION_OPTIONS: Record<FileOpenLocation, string> = Object.fromEntries(
+	FILE_OPEN_LOCATION_KEYS.map((key) => [key, openLocationLabel(key)])
+) as Record<FileOpenLocation, string>;
 
 function showMenuAtEl(menu: Menu, el: HTMLElement): void {
 	const rect = el.getBoundingClientRect();
@@ -78,7 +86,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 	}
 
 	getSettingDefinitions(): SettingDefinitionItem[] {
-		return [
+		const definitions: SettingDefinitionItem[] = [
 			{
 				name: t("settings.iconFolder.name"),
 				desc: t("settings.iconFolder.description"),
@@ -89,18 +97,29 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 				},
 			},
 			{
-				name: t("settings.noteOpenLocation.name"),
-				desc: t("settings.noteOpenLocation.description"),
+				name: t("settings.defaultFileOpenLocation.name"),
+				desc: t("settings.defaultFileOpenLocation.description"),
 				control: {
 					type: "dropdown",
-					key: "noteOpenLocation",
+					key: "defaultFileOpenLocation",
 					defaultValue: "tab",
-					options: NOTE_OPEN_OPTIONS,
+					options: FILE_OPEN_LOCATION_OPTIONS,
 				},
 			},
-			this.pinsPage(),
-			this.groupsPage(),
 		];
+		definitions.push({
+			name: t("settings.defaultWebOpenLocation.name"),
+			desc: t("settings.defaultWebOpenLocation.description"),
+			visible: () => isWebViewerAvailable(this.app),
+			control: {
+				type: "dropdown",
+				key: "defaultWebOpenLocation",
+				defaultValue: "tab",
+				options: OPEN_LOCATION_OPTIONS,
+			},
+		});
+		definitions.push(this.pinsPage(), this.groupsPage());
+		return definitions;
 	}
 
 	private get pins(): RibbonPin[] {
@@ -185,6 +204,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					entry.path = result.path;
 					entry.displayName = result.displayName;
 					entry.icon = result.icon;
+					entry.openLocation = result.openLocation;
 					onSaved();
 				},
 				forPin
@@ -198,6 +218,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 					entry.url = result.url;
 					entry.displayName = result.displayName;
 					entry.icon = result.icon;
+					entry.openLocation = result.openLocation;
 					onSaved();
 				},
 				forPin
@@ -353,6 +374,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 									url: result.url.trim(),
 									displayName: result.displayName,
 									icon: result.icon,
+									openLocation: result.openLocation,
 								},
 							};
 							this.pins.push(pin);
@@ -663,6 +685,7 @@ export class RibbonFolderSettingTab extends PluginSettingTab {
 							url: result.url.trim(),
 							displayName: result.displayName,
 							icon: result.icon,
+							openLocation: result.openLocation,
 						});
 						void this.saveAndUpdate();
 					}).open();

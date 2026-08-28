@@ -12,14 +12,13 @@
                 "name": "New group",
                 "description": "Add a new button group to the Ribbon"
             },
-            "noteOpenLocation": {
-                "name": "Open files in",
-                "description": "Where to open a file when you click it from a Ribbon shortcut or group menu.",
-                "options": {
-                    "tab": "New tab",
-                    "current": "Existing tab",
-                    "split": "Split"
-                }
+            "defaultFileOpenLocation": {
+                "name": "Default file open location",
+                "description": "Where files open by default. Each file item can override this."
+            },
+            "defaultWebOpenLocation": {
+                "name": "Default web open location",
+                "description": "Where web links open by default. Each web item can override this."
             },
             "pinsPage": {
                 "name": "Shortcuts",
@@ -116,8 +115,8 @@
             "edit": {
                 "title": "Edit web link",
                 "url": "URL",
-                "urlDescription": "Full URL (https://…) or a hostname; https is assumed when no scheme is given.",
-                "urlPlaceholder": "https://example.com or example.com",
+                "urlDescription": "Address to open in your browser.",
+                "urlPlaceholder": "example.com",
                 "display": "Menu label",
                 "displayDescription": "Label in the menu (leave blank to use the URL)",
                 "displayPlaceholder": "Display name",
@@ -147,6 +146,23 @@
             "displayDescriptionNote": "Tooltip on the ribbon action button (leave blank to use the file name)",
             "displayDescriptionWeb": "Tooltip on the ribbon action button (leave blank to use the URL)",
             "displayPlaceholder": "Custom label"
+        },
+        "openLocation": {
+            "name": "Open in",
+            "entryDescription": "Choose Default to follow the global setting.",
+            "options": {
+                "default": "Default",
+                "tab": "New tab",
+                "current": "Active tab",
+                "split-right": "Split right",
+                "split-left": "Split left",
+                "split-up": "Split up",
+                "split-down": "Split down",
+                "left": "Left sidebar",
+                "right": "Right sidebar",
+                "window": "New window",
+                "browser": "System browser"
+            }
         },
         "plugin": {
             "openGroupMenu": "Ribbon Folder: Open group menu…",

@@ -6,6 +6,7 @@ import {
 	Platform,
 	Plugin,
 	TFile,
+	type EventRef,
 	type HoverParent,
 	type HoverPopover,
 } from "obsidian";
@@ -16,7 +17,7 @@ import type {
 	RibbonFolderSettings,
 	RibbonPin,
 	MenuDisplayMode,
-	NoteOpenLocation,
+	EntryOpenLocation,
 } from "./types";
 import {
 	DEFAULT_SETTINGS,
@@ -30,6 +31,14 @@ import { getEntryIconRaw, getEntryLabel, getPathExtension, type RibbonActionEntr
 import { listCommandsWithIcons } from "./utils/commands";
 import { getCssVarPx } from "./utils";
 import { resolveIconId, applyWideIconSize } from "./utils/icon";
+import {
+	migrateFileOpenLocation,
+	migrateOpenLocation,
+	openFileAtLocation,
+	openWebAtLocation,
+	resolveFileOpenLocation,
+	resolveWebOpenLocation,
+} from "./utils/openLocation";
 import { RibbonFolderSettingTab } from "./SettingTab";
 import { t, updateLanguage } from "./i18n";
 
@@ -44,12 +53,25 @@ export type {
 	RibbonPin,
 	RibbonPinEntry,
 	RibbonFolderSettings,
+	OpenLocation,
+	FileOpenLocation,
+	EntryOpenLocation,
 	NoteOpenLocation,
 } from "./types";
 
 const RIBBON_OR_LAYOUT_CLS = /horizontal-main-container|workspace-leaf|workspace-split|mod-root|side-dock-actions|workspace-ribbon|mod-left/;
 
 const HOVER_LINK_SOURCE_ID = "ribbon-folder";
+
+type InternalPluginChange = {
+	instance?: { id?: string };
+};
+
+type AppWithInternalPluginEvents = App & {
+	internalPlugins?: {
+		on(name: "change", callback: (plugin?: InternalPluginChange) => void): EventRef;
+	};
+};
 
 export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	hoverPopover: HoverPopover | null = null;
@@ -60,7 +82,18 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	async onload() {
 		await this.loadSettings();
 		await this.rebuildRibbons();
-		this.addSettingTab(new RibbonFolderSettingTab(this.app, this));
+		const settingTab = new RibbonFolderSettingTab(this.app, this);
+		this.addSettingTab(settingTab);
+		const internalPlugins = (this.app as AppWithInternalPluginEvents).internalPlugins;
+		if (internalPlugins) {
+			this.registerEvent(
+				internalPlugins.on("change", (plugin) => {
+					if (!plugin?.instance?.id || plugin.instance.id === "webviewer") {
+						settingTab.update();
+					}
+				})
+			);
+		}
 
 		this.registerHoverLinkSource(HOVER_LINK_SOURCE_ID, {
 			display: this.manifest.name,
@@ -84,6 +117,15 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	async loadSettings() {
 		const data = (await this.loadData()) as Partial<RibbonFolderSettings> | null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data ?? {});
+		const legacyOpenLocation = data?.defaultOpenLocation ?? data?.noteOpenLocation;
+		if (!data?.defaultFileOpenLocation) {
+			this.settings.defaultFileOpenLocation = migrateFileOpenLocation(legacyOpenLocation);
+		}
+		if (!data?.defaultWebOpenLocation) {
+			this.settings.defaultWebOpenLocation = migrateOpenLocation(data?.defaultOpenLocation);
+		}
+		delete this.settings.defaultOpenLocation;
+		delete this.settings.noteOpenLocation;
 		if (!this.settings.pins) {
 			this.settings.pins = [];
 		}
@@ -229,17 +271,9 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	}
 
 	/** 按设置将库内文件在指定 leaf 中打开 */
-	openNoteFile(file: TFile): void {
-		const mode: NoteOpenLocation = this.settings.noteOpenLocation ?? "tab";
-		let leaf;
-		if (mode === "tab") {
-			leaf = this.app.workspace.getLeaf("tab");
-		} else if (mode === "split") {
-			leaf = this.app.workspace.getLeaf("split");
-		} else {
-			leaf = this.app.workspace.getLeaf(false);
-		}
-		void leaf.openFile(file);
+	openNoteFile(file: TFile, entryLocation?: EntryOpenLocation): void {
+		const location = resolveFileOpenLocation(entryLocation, this.settings);
+		void openFileAtLocation(this.app, file, location);
 	}
 
 	/**
@@ -292,7 +326,7 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 			onClick = () => {
 				const f = this.app.vault.getAbstractFileByPath(entry.path);
 				if (f instanceof TFile) {
-					this.openNoteFile(f);
+					this.openNoteFile(f, entry.openLocation);
 				}
 			};
 		} else if (isRibbonWebEntry(entry)) {
@@ -302,7 +336,8 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 					new Notice(t("web.openBlocked"));
 					return;
 				}
-				window.open(normalized, "_blank", "noopener,noreferrer");
+				const location = resolveWebOpenLocation(entry.openLocation, this.settings);
+				void openWebAtLocation(this.app, normalized, location);
 			};
 		} else {
 			onClick = () => {
