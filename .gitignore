@@ -21,6 +21,10 @@ data.json
 # Local sample / test vaults
 examples/
 
+# Local QA artifacts and detached release packages
+.artifacts/
+.release/
+
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
 

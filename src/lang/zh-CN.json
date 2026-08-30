@@ -173,6 +173,7 @@
             "searchPlaceholder": "搜索命令...",
             "svgIcon": {
                 "searchPlaceholder": "搜索 SVG 图标…",
+                "iconFolderRequired": "请先在 Ribbon Folder 设置中配置图标文件夹，再选择 SVG。",
                 "emptyState": "图标文件夹中暂无 .svg 文件，可在此目录放入图标或直接填写 Lucide 图标名（如 dice）"
             }
         }

@@ -1,4 +1,4 @@
-import { App, Setting } from "obsidian";
+import { App, Notice, Setting } from "obsidian";
 import { SvgIconSuggestModal } from "../SvgIconSuggestModal";
 import { getSvgPathsInFolder } from "./icon";
 import { t } from "../i18n";
@@ -15,8 +15,14 @@ export function addSelectSvgExtraButton(
 			.setIcon("image")
 			.setTooltip(t("folder.selectSvg"))
 			.onClick(() => {
+				const iconFolder = getIconFolder().trim();
+				if (!iconFolder) {
+					new Notice(t("modal.svgIcon.iconFolderRequired"));
+					return;
+				}
+
 				void (async () => {
-					const items = await getSvgPathsInFolder(app, getIconFolder() || "");
+					const items = await getSvgPathsInFolder(app, iconFolder);
 					new SvgIconSuggestModal(app, items, onPick).open();
 				})();
 			});

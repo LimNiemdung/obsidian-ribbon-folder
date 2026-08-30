@@ -34,7 +34,7 @@ export type FileOpenLocation = Exclude<OpenLocation, "browser">;
 /** 菜单项单独设置；default 表示跟随全局默认 */
 export type EntryOpenLocation = "default" | OpenLocation;
 
-/** @deprecated 使用 FileOpenLocation；保留旧版 split 值供外部类型兼容 */
+/** 旧版笔记打开位置类型（含 split），保留供外部类型兼容 */
 export type NoteOpenLocation = "tab" | "current" | "split";
 
 /** 分组内一条命令（菜单项） */

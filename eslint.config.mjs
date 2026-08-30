@@ -3,7 +3,17 @@ import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default [
-	{ ignores: ["node_modules/", "main.js", "eslint.config.mjs", "*.config.mjs", "*.mjs"] },
+	{
+		ignores: [
+			"node_modules/",
+			"**/main.js",
+			".artifacts/",
+			"examples/",
+			"eslint.config.mjs",
+			"*.config.mjs",
+			"*.mjs",
+		],
+	},
 	js.configs.recommended,
 	...tseslint.configs.recommended.map((c) => ({
 		...c,
@@ -41,7 +51,7 @@ export default [
 			"obsidianmd/validate-license": "off",
 			"obsidianmd/hardcoded-config-path": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",
-			"@typescript-eslint/no-unsafe-call": "off",
+			"@typescript-eslint/no-unsafe-call": "error",
 			"@typescript-eslint/no-unsafe-argument": "off",
 		},
 	},

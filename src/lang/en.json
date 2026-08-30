@@ -173,6 +173,7 @@
             "searchPlaceholder": "Search commands...",
             "svgIcon": {
                 "searchPlaceholder": "Search SVG icons...",
+                "iconFolderRequired": "Set an icon folder in the Ribbon Folder settings before choosing an SVG.",
                 "emptyState": "No .svg files in icon folder. You can place icons in this directory or use Lucide icon names directly (e.g., dice)."
             }
         }

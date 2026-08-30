@@ -73,6 +73,13 @@ type AppWithInternalPluginEvents = App & {
 	};
 };
 
+type LegacyStoredSettings = {
+	defaultOpenLocation?: string;
+	noteOpenLocation?: string;
+};
+
+type StoredSettings = Omit<Partial<RibbonFolderSettings>, keyof LegacyStoredSettings> & LegacyStoredSettings;
+
 export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	hoverPopover: HoverPopover | null = null;
 	settings: RibbonFolderSettings;
@@ -115,17 +122,20 @@ export default class RibbonFolderPlugin extends Plugin implements HoverParent {
 	}
 
 	async loadSettings() {
-		const data = (await this.loadData()) as Partial<RibbonFolderSettings> | null;
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, data ?? {});
-		const legacyOpenLocation = data?.defaultOpenLocation ?? data?.noteOpenLocation;
-		if (!data?.defaultFileOpenLocation) {
-			this.settings.defaultFileOpenLocation = migrateFileOpenLocation(legacyOpenLocation);
+		const data = ((await this.loadData()) ?? {}) as StoredSettings;
+		const {
+			defaultOpenLocation: legacyDefaultOpenLocation,
+			noteOpenLocation: legacyNoteOpenLocation,
+			...currentSettings
+		} = data;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, currentSettings);
+		const legacyFileOpenLocation = legacyDefaultOpenLocation ?? legacyNoteOpenLocation;
+		if (!currentSettings.defaultFileOpenLocation) {
+			this.settings.defaultFileOpenLocation = migrateFileOpenLocation(legacyFileOpenLocation);
 		}
-		if (!data?.defaultWebOpenLocation) {
-			this.settings.defaultWebOpenLocation = migrateOpenLocation(data?.defaultOpenLocation);
+		if (!currentSettings.defaultWebOpenLocation) {
+			this.settings.defaultWebOpenLocation = migrateOpenLocation(legacyDefaultOpenLocation);
 		}
-		delete this.settings.defaultOpenLocation;
-		delete this.settings.noteOpenLocation;
 		if (!this.settings.pins) {
 			this.settings.pins = [];
 		}

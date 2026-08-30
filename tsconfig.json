@@ -14,7 +14,7 @@
     "esModuleInterop": true,
     "lib": [
       "DOM",
-      "ES2017"
+      "ES2019"
     ]
   },
   "include": [

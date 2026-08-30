@@ -28,6 +28,25 @@ export function normalizePath(p: string): string {
 	return p.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+/g, "/");
 }
 
+function normalizeSafeVaultFolderPath(folderPath: string): string | null {
+	const rawPath = folderPath.trim();
+	if (
+		!rawPath ||
+		rawPath.startsWith("/") ||
+		rawPath.startsWith("\\") ||
+		/^[a-zA-Z]:/.test(rawPath) ||
+		rawPath.includes("\0")
+	) {
+		return null;
+	}
+
+	const segments = rawPath.replace(/\\/g, "/").split("/");
+	if (segments.includes("..")) return null;
+
+	const normalized = segments.filter((segment) => segment && segment !== ".").join("/");
+	return normalized || null;
+}
+
 export function computeHash(s: string): string {
 	let h = 2166136261;
 	for (let i = 0; i < s.length; i++) {
@@ -41,7 +60,9 @@ export function computeHash(s: string): string {
  * 列出文件夹下所有 .svg 路径（使用 adapter.list 以包含隐藏目录如 .obsidian/icons）
  */
 export async function getSvgPathsInFolder(app: App, folderPath: string): Promise<string[]> {
-	const base = normalizePath(folderPath).replace(/\/$/, "") || "";
+	const base = normalizeSafeVaultFolderPath(folderPath);
+	if (!base) return [];
+
 	const out: string[] = [];
 
 	async function walk(dir: string): Promise<void> {

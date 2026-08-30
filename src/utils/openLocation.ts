@@ -18,6 +18,15 @@ type DesktopWindow = Window & {
 	require?: (moduleId: string) => { shell?: ElectronShell };
 };
 
+type LegacyOpenLocationSettings = {
+	defaultOpenLocation?: string;
+	noteOpenLocation?: string;
+};
+
+function getLegacyOpenLocationSettings(settings: RibbonFolderSettings): LegacyOpenLocationSettings {
+	return settings as unknown as LegacyOpenLocationSettings;
+}
+
 export const OPEN_LOCATION_KEYS: OpenLocation[] = [
 	"tab",
 	"current",
@@ -70,9 +79,12 @@ export function resolveFileOpenLocation(
 	settings: RibbonFolderSettings
 ): FileOpenLocation {
 	if (entryLocation && entryLocation !== "default" && entryLocation !== "browser") {
-		return entryLocation;
+		return migrateFileOpenLocation(entryLocation);
 	}
-	return settings.defaultFileOpenLocation ?? migrateFileOpenLocation(settings.defaultOpenLocation);
+	const legacySettings = getLegacyOpenLocationSettings(settings);
+	return migrateFileOpenLocation(
+		settings.defaultFileOpenLocation ?? legacySettings.defaultOpenLocation ?? legacySettings.noteOpenLocation
+	);
 }
 
 export function resolveWebOpenLocation(
@@ -80,9 +92,10 @@ export function resolveWebOpenLocation(
 	settings: RibbonFolderSettings
 ): OpenLocation {
 	if (entryLocation && entryLocation !== "default") {
-		return entryLocation;
+		return migrateOpenLocation(entryLocation);
 	}
-	return settings.defaultWebOpenLocation ?? settings.defaultOpenLocation ?? "tab";
+	const legacySettings = getLegacyOpenLocationSettings(settings);
+	return migrateOpenLocation(settings.defaultWebOpenLocation ?? legacySettings.defaultOpenLocation);
 }
 
 export function normalizeEntryOpenLocation(value: EntryOpenLocation | undefined): EntryOpenLocation | undefined {
@@ -94,11 +107,8 @@ function getSplitLeaf(app: App, direction: "vertical" | "horizontal", before: bo
 	if (!before) {
 		return ws.getLeaf("split", direction);
 	}
-	const base = ws.activeLeaf ?? ws.getMostRecentLeaf();
-	if (base) {
-		return ws.createLeafBySplit(base, direction, true);
-	}
-	return ws.getLeaf("split", direction);
+	const base = ws.getLeaf(false);
+	return ws.createLeafBySplit(base, direction, true);
 }
 
 export function getLeafForOpenLocation(app: App, location: OpenLocation): WorkspaceLeaf {
