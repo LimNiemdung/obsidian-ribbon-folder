@@ -1,6 +1,6 @@
 {
 	"name": "ribbon-folder",
-	"version": "1.0.0",
+	"version": "1.0.8",
 	"description": "将多个命令收纳到 Ribbon 分组按钮中，点击后弹出子菜单执行命令",
 	"main": "main.js",
 	"scripts": {
