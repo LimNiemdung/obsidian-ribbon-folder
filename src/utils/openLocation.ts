@@ -24,7 +24,7 @@ type LegacyOpenLocationSettings = {
 };
 
 function getLegacyOpenLocationSettings(settings: RibbonFolderSettings): LegacyOpenLocationSettings {
-	return settings as unknown as LegacyOpenLocationSettings;
+	return settings;
 }
 
 export const OPEN_LOCATION_KEYS: OpenLocation[] = [
